@@ -479,12 +479,13 @@
             bodyLog = storage.getBodyLog();
             supplementLog = storage.getSupplementLog();
 
-            if (!currentUser) {
+            if (!currentUser || !currentUser.name) {
               showWelcomeScreen();
             } else {
               showAppScreen();
               switchView('perfil');
               syncWithCloud(); // Sync silently on start
+              startAutoSync(); // Start periodic background sync
             }
           } else {
             showAuthScreen();
@@ -826,6 +827,12 @@
       }
     }
 
+    let syncIntervalId = null;
+    function startAutoSync() {
+      if (syncIntervalId) clearInterval(syncIntervalId);
+      syncIntervalId = setInterval(syncWithCloud, 30000);
+    }
+
     /***************************************************************************
      * 6. COMMON EVENT REGISTRATION
      **************************************************************************/
@@ -959,6 +966,7 @@
 
           // Upload first state to cloud
           syncWithCloud();
+          startAutoSync();
         }
       });
 
@@ -1014,6 +1022,10 @@
       // Logout Button
       document.getElementById('logoutBtn').addEventListener('click', () => {
         if (confirm("¿Estás seguro de que querés cerrar sesión? Se eliminarán los datos locales de este dispositivo (asegurate de haber sincronizado).")) {
+          if (syncIntervalId) {
+            clearInterval(syncIntervalId);
+            syncIntervalId = null;
+          }
           storage.setSession(null);
           localStorage.removeItem('gymtracker_user');
           localStorage.removeItem('gymtracker_sessions');
@@ -1118,7 +1130,7 @@
      * 7. PROFILE VIEW LOGIC (Perfil)
      **************************************************************************/
     function renderProfile() {
-      if (!currentUser) return;
+      if (!currentUser || !currentUser.name) return;
       
       // Avatar initials
       const initials = currentUser.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
@@ -1126,13 +1138,20 @@
       document.getElementById('profileName').textContent = currentUser.name;
       
       // Core Metrics
-      document.getElementById('metricWeight').textContent = `${currentUser.weight.toFixed(1)} kg`;
-      document.getElementById('metricHeight').textContent = `${currentUser.height} cm`;
+      const weightVal = parseFloat(currentUser.weight);
+      const heightVal = parseFloat(currentUser.height);
+      
+      document.getElementById('metricWeight').textContent = !isNaN(weightVal) ? `${weightVal.toFixed(1)} kg` : '--';
+      document.getElementById('metricHeight').textContent = !isNaN(heightVal) ? `${heightVal} cm` : '--';
       
       // Calculate IMC
-      const heightM = currentUser.height / 100;
-      const imc = currentUser.weight / (heightM * heightM);
-      document.getElementById('metricImc').textContent = imc.toFixed(1);
+      if (!isNaN(weightVal) && !isNaN(heightVal) && heightVal > 0) {
+        const heightM = heightVal / 100;
+        const imc = weightVal / (heightM * heightM);
+        document.getElementById('metricImc').textContent = imc.toFixed(1);
+      } else {
+        document.getElementById('metricImc').textContent = '--';
+      }
 
       // Sincronización Metadata
       const session = storage.getSession();
