@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="theme-color" content="#0a0a0f">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>GymTracker — Entrená al Límite</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Exo+2:ital,wght@0,300..900;1,300..900&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- App Header & Navigation Wrapper -->
+  <div id="appHeaderNav" class="desktop-header-wrapper" style="display: none;">
+    <header>
+      <div class="logo-container">
+        <!-- Stylized dumbbell icon SVG -->
+        <svg class="logo-icon" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Dark cast iron radial gradient -->
+            <radialGradient id="plateGrad2" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
+              <stop offset="0%" stop-color="#3b4252" />
+              <stop offset="30%" stop-color="#232834" />
+              <stop offset="75%" stop-color="#141822" />
+              <stop offset="100%" stop-color="#0a0d14" />
+            </radialGradient>
+            
+            <!-- Steel linear gradient for the shiny metallic parts -->
+            <linearGradient id="steelGrad2" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8f9aa9" />
+              <stop offset="30%" stop-color="#d9e2ec" />
+              <stop offset="50%" stop-color="#48515e" />
+              <stop offset="70%" stop-color="#bcccdc" />
+              <stop offset="100%" stop-color="#242930" />
+            </linearGradient>
+
+            <!-- Weld bead filter -->
+            <filter id="weldFilter2" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+              <feGaussianBlur in="displaced" stdDeviation="0.8" result="blur" />
+              <feSpecularLighting in="blur" surfaceScale="2" specConstant="1.5" specExponent="25" lighting-color="#e6f2ff" result="light">
+                <feDistantLight azimuth="225" elevation="55" />
+              </feSpecularLighting>
+              <feComposite in="light" in2="displaced" operator="in" result="light-spec" />
+              <feMerge>
+                <feMergeNode in="displaced" />
+                <feMergeNode in="light-spec" />
+              </feMerge>
+            </filter>
+
+            <!-- Paths for top and bottom curved text -->
+            <path id="textPathTop2" d="M 32 100 A 68 68 0 0 1 168 100" />
+            <path id="textPathBottom2" d="M 168 100 A 68 68 0 0 1 32 100" />
+          </defs>
+
+          <!-- Outer Ring (Rim of the plate) -->
+          <circle cx="100" cy="100" r="92" fill="url(#plateGrad2)" stroke="url(#steelGrad2)" stroke-width="4.5" />
+          
+          <!-- Inner stepped circles -->
+          <circle cx="100" cy="100" r="82" fill="none" stroke="#0a0d14" stroke-width="2.5" />
+          <circle cx="100" cy="100" r="54" fill="none" stroke="url(#steelGrad2)" stroke-width="3" />
+          <circle cx="100" cy="100" r="48" fill="none" stroke="#0a0d14" stroke-width="1.5" />
+
+          <!-- Grip handles cutouts (Professional 3-spoke design) -->
+          <g fill="#0c0f16" stroke="url(#steelGrad2)" stroke-width="1.5" opacity="0.9">
+            <!-- Cutout 1 (Top) -->
+            <path d="M 84.5 42 A 60 60 0 0 1 115.5 42 L 112.4 53.6 A 48 48 0 0 0 87.6 53.6 Z" />
+            <!-- Cutout 2 (Bottom Left) -->
+            <path d="M 42 115.5 A 60 60 0 0 1 57.6 142.4 L 66.1 133.9 A 48 48 0 0 0 53.6 112.4 Z" />
+            <!-- Cutout 3 (Bottom Right) -->
+            <path d="M 142.4 142.4 A 60 60 0 0 1 158 115.5 L 146.4 112.4 A 48 48 0 0 0 133.9 133.9 Z" />
+          </g>
+
+          <!-- Central Hub (Metal insert) -->
+          <circle cx="100" cy="100" r="26" fill="url(#steelGrad2)" stroke="#090c12" stroke-width="2" />
+          <circle cx="100" cy="100" r="16" fill="#040609" stroke="#5d6a7e" stroke-width="2.5" />
+          
+          <!-- Welded Text: GYM TRACKER (Top curve) -->
+          <text font-family="'Exo 2', 'Arial Black', sans-serif" font-size="13" font-weight="900" letter-spacing="4" fill="url(#steelGrad2)">
+            <textPath href="#textPathTop2" startOffset="50%" text-anchor="middle" filter="url(#weldFilter2)">
+              GYM TRACKER
+            </textPath>
+          </text>
+          
+          <!-- Subtext: SIN LÍMITES (Bottom curve) -->
+          <text font-family="'JetBrains Mono', monospace" font-size="9" font-weight="800" fill="#7a8ba8" letter-spacing="2.5">
+            <textPath href="#textPathBottom2" startOffset="50%" text-anchor="middle">
+              SIN LÍMITES
+            </textPath>
+          </text>
+        </svg>
+        <span class="logo-text">GymTracker</span>
+      </div>
+      <div class="header-actions">
+        <button id="themeToggleBtn" class="btn-icon" aria-label="Cambiar tema">
+          <!-- Moon Icon (Default for Dark Theme) -->
+          <svg id="themeIcon" viewBox="0 0 24 24">
+            <path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="bottom-nav">
+      <button class="nav-item active" data-view="perfil">
+        <!-- Profile Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M12,19.2C9.5,19.2 7.29,17.92 6,16C6.03,14 10,12.9 12,12.9C14,12.9 17.97,14 18,16C16.71,17.92 14.5,19.2 12,19.2M12,5A3,3 0 0,1 15,8A3,3 0 0,1 12,11A3,3 0 0,1 9,8A3,3 0 0,1 12,5M12,2A10,10 0 0,0 2,12A10,10 0 0,0 12,22A10,10 0 0,0 22,12A10,10 0 0,0 12,2Z"/>
+        </svg>
+        <span>Perfil</span>
+      </button>
+      <button class="nav-item" data-view="calendario">
+        <!-- Calendar Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/>
+        </svg>
+        <span>Calendario</span>
+      </button>
+      <button class="nav-item" data-view="progreso">
+        <!-- Chart Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M16,11.78L20.22,16L18.8,17.41L14.58,13.2L10.36,17.41L7.54,14.58L3.3,18.82L1.88,17.4L7.54,11.76L10.36,14.58L14.58,10.36L16,11.78M22,20H2V2H4V18H22V20Z"/>
+        </svg>
+        <span>Progreso</span>
+      </button>
+      <button class="nav-item" data-view="ejercicios">
+        <!-- Dumbbell Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M5,9H3A1,1,0,0,0,2,10v4a1,1,0,0,0,1,1H5a1,1,0,0,0,1-1V10A1,1,0,0,0,5,9Zm16,0H19a1,1,0,0,0,-1,1v4a1,1,0,0,0,1,1h2a1,1,0,0,0,1,-1V10A1,1,0,0,0,21,9ZM17,11H7v2H17ZM6,8V16a1,1,0,0,0,1,1H8V7H7A1,1,0,0,0,6,8Zm11,-1H16V17h1a1,1,0,0,0,1,-1V8A1,1,0,0,0,17,7Z"/>
+        </svg>
+        <span>Ejercicios</span>
+      </button>
+      <button class="nav-item" data-view="suplementos">
+        <!-- Capsule/Pill Icon -->
+        <svg viewBox="0 0 24 24">
+          <path d="M4.22,11.29L11.29,4.22C12.07,3.44 13.07,3 14.14,3C15.21,3 16.21,3.44 17,4.22L19.78,7C20.56,7.79 21,8.79 21,9.86C21,10.93 20.56,11.93 19.78,12.71L12.71,19.78C11.93,20.56 10.93,21 9.86,21C8.79,21 7.79,20.56 7,19.78L4.22,17C3.44,16.21 3,15.21 3,14.14C3,13.07 3.44,12.07 4.22,11.29M5.64,12.71L12.71,19.78C13.1,20.17 13.47,20.38 13.86,20.41L13.86,5.59C13.47,5.62 13.1,5.83 12.71,6.22L5.64,12.71Z"/>
+        </svg>
+        <span>Suplementos</span>
+      </button>
+    </nav>
+  </div>
+
+  <!-- Content Screens Area -->
+  <main class="content-area">
+    
+    <!-- ACCESO Y LOGIN SCREEN (Supabase Auth) -->
+    <div id="authScreen" style="display: none;">
+      <div class="access-container">
+        <svg class="welcome-logo" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <!-- Dark cast iron radial gradient -->
+            <radialGradient id="plateGrad1" cx="50%" cy="50%" r="50%" fx="35%" fy="35%">
+              <stop offset="0%" stop-color="#3b4252" />
+              <stop offset="30%" stop-color="#232834" />
+              <stop offset="75%" stop-color="#141822" />
+              <stop offset="100%" stop-color="#0a0d14" />
+            </radialGradient>
+            
+            <!-- Steel linear gradient for the shiny metallic parts -->
+            <linearGradient id="steelGrad1" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stop-color="#8f9aa9" />
+              <stop offset="30%" stop-color="#d9e2ec" />
+              <stop offset="50%" stop-color="#48515e" />
+              <stop offset="70%" stop-color="#bcccdc" />
+              <stop offset="100%" stop-color="#242930" />
+            </linearGradient>
+
+            <!-- Weld bead filter -->
+            <filter id="weldFilter1" x="-20%" y="-20%" width="140%" height="140%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.08" numOctaves="3" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2.5" xChannelSelector="R" yChannelSelector="G" result="displaced" />
+              <feGaussianBlur in="displaced" stdDeviation="0.8" result="blur" />
+              <feSpecularLighting in="blur" surfaceScale="2" specConstant="1.5" specExponent="25" lighting-color="#e6f2ff" result="light">
+                <feDistantLight azimuth="225" elevation="55" />
+              </feSpecularLighting>
+              <feComposite in="light" in2="displaced" operator="in" result="light-spec" />
+              <feMerge>
+                <feMergeNode in="displaced" />
+                <feMergeNode in="light-spec" />
+              </feMerge>
+            </filter>
+
+            <!-- Paths for top and bottom curved text -->
+            <path id="textPathTop1" d="M 32 100 A 68 68 0 0 1 168 100" />
+            <path id="textPathBottom1" d="M 168 100 A 68 68 0 0 1 32 100" />
+          </defs>
+
+          <!-- Outer Ring (Rim of the plate) -->
+          <circle cx="100" cy="100" r="92" fill="url(#plateGrad1)" stroke="url(#steelGrad1)" stroke-width="4.5" />
+          
+          <!-- Inner stepped circles -->
+          <circle cx="100" cy="100" r="82" fill="none" stroke="#0a0d14" stroke-width="2.5" />
+          <circle cx="100" cy="100" r="54" fill="none" stroke="url(#steelGrad1)" stroke-width="3" />
+          <circle cx="100" cy="100" r="48" fill="none" stroke="#0a0d14" stroke-width="1.5" />
+
+          <!-- Grip handles cutouts (Professional 3-spoke design) -->
+          <g fill="#0c0f16" stroke="url(#steelGrad1)" stroke-width="1.5" opacity="0.9">
+            <!-- Cutout 1 (Top) -->
+            <path d="M 84.5 42 A 60 60 0 0 1 115.5 42 L 112.4 53.6 A 48 48 0 0 0 87.6 53.6 Z" />
+            <!-- Cutout 2 (Bottom Left) -->
+            <path d="M 42 115.5 A 60 60 0 0 1 57.6 142.4 L 66.1 133.9 A 48 48 0 0 0 53.6 112.4 Z" />
+            <!-- Cutout 3 (Bottom Right) -->
+            <path d="M 142.4 142.4 A 60 60 0 0 1 158 115.5 L 146.4 112.4 A 48 48 0 0 0 133.9 133.9 Z" />
+          </g>
+
+          <!-- Central Hub (Metal insert) -->
+          <circle cx="100" cy="100" r="26" fill="url(#steelGrad1)" stroke="#090c12" stroke-width="2" />
+          <circle cx="100" cy="100" r="16" fill="#040609" stroke="#5d6a7e" stroke-width="2.5" />
+          
+          <!-- Welded Text: GYM TRACKER (Top curve) -->
+          <text font-family="'Exo 2', 'Arial Black', sans-serif" font-size="13" font-weight="900" letter-spacing="4" fill="url(#steelGrad1)">
+            <textPath href="#textPathTop1" startOffset="50%" text-anchor="middle" filter="url(#weldFilter1)">
+              GYM TRACKER
+            </textPath>
+          </text>
+          
+          <!-- Subtext: SIN LÍMITES (Bottom curve) -->
+          <text font-family="'JetBrains Mono', monospace" font-size="9" font-weight="800" fill="#7a8ba8" letter-spacing="2.5">
+            <textPath href="#textPathBottom1" startOffset="50%" text-anchor="middle">
+              SIN LÍMITES
+            </textPath>
+          </text>
+        </svg>
+        <h1 class="welcome-title" style="margin-bottom: 24px;">GymTracker</h1>
+        
+        <div id="authError" class="error-box">Error al ingresar</div>
+        <div id="authInfo" class="info-box"></div>
+
+        <!-- Mode switcher tab -->
+        <div class="auth-tab-group">
+          <button id="tabLoginBtn" class="auth-tab-btn active-tab">Iniciar Sesión</button>
+          <button id="tabRegisterBtn" class="auth-tab-btn">Registrarse</button>
+        </div>
+
+        <form id="authForm" class="welcome-form">
+          <div class="form-group">
+            <label for="authEmail">Email</label>
+            <input type="email" id="authEmail" class="input-field" required placeholder="correo@ejemplo.com">
+          </div>
+          <div class="form-group" style="margin-bottom: 20px;">
+            <label for="authPassword">Contraseña</label>
+            <input type="password" id="authPassword" class="input-field" required placeholder="••••••••" minlength="6">
+          </div>
+          <button type="submit" id="authSubmitBtn" class="btn-primary pulse-animation">Entrar</button>
+        </form>
+
+        <!-- Supabase configurado automáticamente -->
+      </div>
+    </div>
+
+    <!-- PANTALLA BIENVENIDA (Completar Perfil Local) -->
+    <div id="welcomeScreen" style="display: none;">
+      <div class="welcome-screen">
+        <h1 class="welcome-title">Perfil de Entrenamiento</h1>
+        <p class="welcome-subtitle">Completá tus medidas iniciales para calcular tu progreso de fuerza.</p>
+        
+        <form id="welcomeForm" class="welcome-form">
+          <div class="form-group">
+            <label for="regName">Tu Nombre</label>
+            <input type="text" id="regName" class="input-field" required placeholder="Ej: Juan Pérez">
+          </div>
+          <div class="form-group">
+            <label for="regWeight">Peso actual (kg)</label>
+            <input type="number" id="regWeight" class="input-field" required step="0.1" min="20" max="300" placeholder="Ej: 75.5">
+          </div>
+          <div class="form-group">
+            <label for="regHeight">Altura actual (cm)</label>
+            <input type="number" id="regHeight" class="input-field" required step="1" min="100" max="250" placeholder="Ej: 178">
+          </div>
+          <button type="submit" class="btn-primary" style="margin-top: 16px;">Comenzar</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- VIEW 1: PERFIL (Profile) -->
+    <section id="view-perfil" class="view-screen">
+      <!-- Profile Header Card -->
+      <div class="card accent-card">
+        <div class="profile-header-card">
+          <div id="profileAvatar" class="profile-avatar">--</div>
+          <div class="profile-info">
+            <h2 id="profileName">Cargando...</h2>
+            <p>Atleta de GymTracker</p>
+          </div>
+        </div>
+
+        <!-- Metrics Grid -->
+        <div class="metrics-grid">
+          <div class="metric-item">
+            <div id="metricWeight" class="metric-value">--</div>
+            <div class="metric-label">Peso Corporal</div>
+          </div>
+          <div class="metric-item">
+            <div id="metricHeight" class="metric-value">--</div>
+            <div class="metric-label">Altura</div>
+          </div>
+          <div class="metric-item">
+            <div id="metricImc" class="metric-value">--</div>
+            <div class="metric-label">IMC</div>
+          </div>
+        </div>
+
+        <button id="updateMeasuresBtn" class="btn-secondary">Actualizar medidas</button>
+
+        <!-- Sparkline weight chart -->
+        <div class="sparkline-container">
+          <div class="sparkline-title">
+            <span>Evolución de peso</span>
+            <span id="sparklineDiff">--</span>
+          </div>
+          <canvas id="weightSparklineCanvas" class="sparkline-canvas"></canvas>
+        </div>
+      </div>
+
+      <!-- Sync Info Card -->
+      <div class="card">
+        <h3 style="font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 8px;">Nube de Sincronización</h3>
+        <p style="font-size:0.85rem; color: var(--text-sec); margin-bottom: 12px;" id="cloudUserText">Conectado como: --</p>
+        <div style="display:flex; justify-content: space-between; align-items:center; margin-bottom: 16px;">
+          <span id="syncBadge" class="sync-status-badge offline">Cargando...</span>
+          <span style="font-size:0.75rem; color:var(--text-sec);" id="syncTimeText">Última sinc: Nunca</span>
+        </div>
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+          <button id="syncNowBtn" class="btn-primary">Sincronizar ahora</button>
+          <button id="logoutBtn" class="btn-secondary" style="border-color:var(--danger); color:var(--danger);">Cerrar Sesión</button>
+        </div>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="stats-row">
+        <div class="stat-card">
+          <div id="statDaysCount" class="stat-number">--</div>
+          <div class="stat-desc">Días Activos</div>
+        </div>
+        <div class="stat-card">
+          <div id="statSessionsCount" class="stat-number">--</div>
+          <div class="stat-desc">Sesiones</div>
+        </div>
+        <div class="stat-card">
+          <div id="statExercisesCount" class="stat-number">--</div>
+          <div class="stat-desc">Ejercicios</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- VIEW 2: CALENDARIO (Calendar) -->
+    <section id="view-calendario" class="view-screen">
+      <div class="calendar-container">
+        
+        <!-- Calendar Grid Card -->
+        <div class="card">
+          <div class="calendar-header">
+            <button id="prevMonthBtn" class="btn-icon">
+              <svg viewBox="0 0 24 24"><path d="M15.41,16.58L10.83,12L15.41,7.41L14,6L8,12L14,18L15.41,16.58Z"/></svg>
+            </button>
+            <h2 id="calendarMonthTitle" class="calendar-title">Junio 2026</h2>
+            <button id="nextMonthBtn" class="btn-icon">
+              <svg viewBox="0 0 24 24"><path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"/></svg>
+            </button>
+          </div>
+          
+          <div class="calendar-grid">
+            <div class="weekday-label">Lun</div>
+            <div class="weekday-label">Mar</div>
+            <div class="weekday-label">Mié</div>
+            <div class="weekday-label">Jue</div>
+            <div class="weekday-label">Vie</div>
+            <div class="weekday-label">Sáb</div>
+            <div class="weekday-label">Dom</div>
+          </div>
+          <div id="calendarDaysGrid" class="calendar-grid">
+            <!-- Days injected dynamically -->
+          </div>
+        </div>
+
+        <!-- Day Detail Panel (Drawer on Mobile, Sidebar on Desktop) -->
+        <div id="dayDetailPanel" class="day-detail-panel">
+          <div class="panel-header">
+            <h3 id="panelDateTitle" class="panel-title">Cargando fecha...</h3>
+            <button id="closePanelBtn" class="btn-icon" style="border:none; background:none;">
+              <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+            </button>
+          </div>
+          <div class="panel-body">
+
+            <!-- ── Ejercicios section ── -->
+            <div class="panel-section-label">
+              <svg viewBox="0 0 24 24"><path d="M5,9H3A1,1,0,0,0,2,10v4a1,1,0,0,0,1,1H5a1,1,0,0,0,1-1V10A1,1,0,0,0,5,9Zm16,0H19a1,1,0,0,0,-1,1v4a1,1,0,0,0,1,1h2a1,1,0,0,0,1,-1V10A1,1,0,0,0,21,9ZM17,11H7v2H17ZM6,8V16a1,1,0,0,0,1,1H8V7H7A1,1,0,0,0,6,8Zm11,-1H16V17h1a1,1,0,0,0,1,-1V8A1,1,0,0,0,17,7Z"/></svg>
+              Ejercicios
+            </div>
+            <div id="panelSessionContent" class="day-sessions-list">
+              <!-- Logged exercises appear here -->
+            </div>
+            <!-- Empty state element -->
+            <div id="panelEmptyState" class="empty-state">
+              <svg viewBox="0 0 24 24">
+                <path d="M19,19H5V8H19M16,1V3H8V1H6V3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3H18V1M17,12H12V17H17V12Z"/>
+              </svg>
+              <p>Sin actividad registrada</p>
+            </div>
+            <div style="width: 100%; margin-top: 12px; margin-bottom: 8px;">
+              <button id="addExerciseBtn" class="btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                Agregar ejercicio
+              </button>
+            </div>
+
+            <!-- ── Suplementos section ── -->
+            <div class="panel-section-divider"></div>
+            <div class="panel-section-label">
+              <svg viewBox="0 0 24 24"><path d="M4.22,11.29L11.29,4.22C12.07,3.44 13.07,3 14.14,3C15.21,3 16.21,3.44 17,4.22L19.78,7C20.56,7.79 21,8.79 21,9.86C21,10.93 20.56,11.93 19.78,12.71L12.71,19.78C11.93,20.56 10.93,21 9.86,21C8.79,21 7.79,20.56 7,19.78L4.22,17C3.44,16.21 3,15.21 3,14.14C3,13.07 3.44,12.07 4.22,11.29M5.64,12.71L12.71,19.78C13.1,20.17 13.47,20.38 13.86,20.41L13.86,5.59C13.47,5.62 13.1,5.83 12.71,6.22L5.64,12.71Z"/></svg>
+              Suplementos
+            </div>
+            <div id="panelSuppSection" class="day-sessions-list">
+              <!-- Supplement entries injected dynamically -->
+            </div>
+            <div style="width: 100%; margin-top: 16px;">
+              <button id="addSuppBtn" class="btn-primary" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg viewBox="0 0 24 24" style="width: 18px; height: 18px; fill: currentColor; flex-shrink: 0;"><path d="M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z"/></svg>
+                Agregar suplementos
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div id="panelOverlay" class="panel-overlay"></div>
+      </div>
+    </section>
+
+    <!-- VIEW 3: PROGRESO (Progress) -->
+    <section id="view-progreso" class="view-screen">
+      <div class="progress-grid">
+        
+        <!-- Racha / Streak Card -->
+        <div class="card progress-card streak-display">
+          <div class="streak-icon">🔥</div>
+          <div class="streak-info">
+            <h3 id="streakDaysCountDisplay">-- días seguidos</h3>
+            <p>Tu constancia de entrenamiento activa</p>
+          </div>
+        </div>
+
+        <!-- Weight evolution Chart -->
+        <div class="progress-card">
+          <h3 class="progress-card-title">Peso corporal</h3>
+          <div class="canvas-container">
+            <canvas id="weightLineChartCanvas" class="chart-canvas"></canvas>
+          </div>
+          <div class="stat-chips-row">
+            <div class="stat-chip">
+              <div id="progressWeightCurrent" class="stat-chip-val">--</div>
+              <div class="stat-chip-label">Actual</div>
+            </div>
+            <div class="stat-chip">
+              <div id="progressWeightStart" class="stat-chip-val">--</div>
+              <div class="stat-chip-label">Inicial</div>
+            </div>
+            <div class="stat-chip">
+              <div id="progressWeightMin" class="stat-chip-val">--</div>
+              <div class="stat-chip-label">Mínimo</div>
+            </div>
+            <div class="stat-chip">
+              <div id="progressWeightMax" class="stat-chip-val">--</div>
+              <div class="stat-chip-label">Máximo</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Training Volume Chart (scrollable) -->
+        <div class="progress-card">
+          <h3 class="progress-card-title">Volumen por sesión (últimos 30 días)</h3>
+          <div class="scrollable-chart-outer">
+            <div class="scrollable-chart-inner">
+              <canvas id="volumeBarChartCanvas" style="width: 100%; height: 100%; display: block;"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <!-- Muscle group distribution donut chart -->
+        <div class="progress-card">
+          <h3 class="progress-card-title">Distribución por grupos musculares</h3>
+          <div class="donut-layout">
+            <div class="canvas-container" style="width: 130px; height: 130px;">
+              <canvas id="muscleDonutCanvas" width="130" height="130" style="display: block;"></canvas>
+            </div>
+            <div id="muscleLegend" class="donut-legend">
+              <!-- Legend items injected dynamically -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Personal Records (PRs) Card -->
+        <div class="progress-card">
+          <h3 class="progress-card-title">Récords Personales (PRs)</h3>
+          <div id="prsContainer" class="pr-list">
+            <!-- PR items appear here -->
+          </div>
+        </div>
+
+        <!-- Supplement Adherence Card -->
+        <div class="progress-card">
+          <h3 class="progress-card-title">💊 Adherencia de Suplementos <span style="font-size:0.75rem; font-weight:400; color:var(--text-sec); margin-left:4px;">(últimos 30 días)</span></h3>
+          <div id="suppAdherenceList" class="supp-adherence-list">
+            <!-- Injected dynamically -->
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- VIEW 4: EJERCICIOS (Exercise library) -->
+    <section id="view-ejercicios" class="view-screen">
+      <div class="search-bar-container">
+        <input type="text" id="libSearchInput" class="input-field" placeholder="Buscar ejercicio...">
+      </div>
+      
+      <!-- Muscle Filter Chips -->
+      <div id="libMuscleChips" class="chip-group" style="overflow-x: auto; white-space: nowrap; padding-bottom: 12px; margin-bottom: 16px;">
+        <!-- Muscle filter chips injected dynamically -->
+      </div>
+
+      <div id="exerciseLibraryList" class="exercise-library-grid">
+        <!-- Exercise cards injected dynamically -->
+      </div>
+    </section>
+
+    <!-- VIEW 5: SUPLEMENTOS (Supplements library) -->
+    <section id="view-suplementos" class="view-screen">
+      <div class="search-bar-container">
+        <input type="text" id="suppSearchInput" class="input-field" placeholder="Buscar suplemento...">
+      </div>
+
+      <!-- Category Filter Chips -->
+      <div id="suppCategoryChips" class="chip-group" style="overflow-x: auto; white-space: nowrap; padding-bottom: 12px; margin-bottom: 16px;">
+        <!-- Category chips injected dynamically -->
+      </div>
+
+      <div id="supplementLibraryList" class="exercise-library-grid">
+        <!-- Supplement cards injected dynamically -->
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Supabase config modal removed — credentials are hardcoded -->
+
+  <!-- MODAL: ACTUALIZAR MEDIDAS (Peso / Altura) -->
+  <div id="measuresModal" class="modal-fullscreen">
+    <div class="modal-header">
+      <h3>Actualizar Medidas</h3>
+      <button id="closeMeasuresModalBtn" class="btn-icon" style="border:none; background:none;">
+        <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+      <form id="measuresForm">
+        <div class="form-group">
+          <label for="measWeight">Peso actual (kg)</label>
+          <input type="number" id="measWeight" class="input-field" required step="0.1" min="20" max="300">
+        </div>
+        <div class="form-group">
+          <label for="measHeight">Altura actual (cm)</label>
+          <input type="number" id="measHeight" class="input-field" required step="1" min="100" max="250">
+        </div>
+        <button type="submit" class="btn-primary" style="margin-top: 24px;">Guardar Medidas</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD EXERCISE FLOW (STEP 1: SELECT EXERCISE) -->
+  <div id="addExerciseModalStep1" class="modal-fullscreen">
+    <div class="modal-header">
+      <h3>Seleccionar Ejercicio</h3>
+      <button id="closeAddExModalStep1Btn" class="btn-icon" style="border:none; background:none;">
+        <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" style="padding-top: 8px;">
+      <div class="search-bar-container">
+        <input type="text" id="addExSearchInput" class="input-field" placeholder="Buscar ejercicio...">
+      </div>
+      <div id="addExMuscleChips" class="chip-group" style="overflow-x: auto; white-space: nowrap; padding-bottom: 12px; margin-bottom: 16px;">
+        <!-- Muscle filter chips injected dynamically -->
+      </div>
+      <div id="accordionContainer" class="accordion-container">
+        <!-- Accordion muscle groups with exercise lists injected dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD EXERCISE FLOW (STEP 2: LOG SETS) -->
+  <div id="addExerciseModalStep2" class="modal-fullscreen">
+    <div class="modal-header">
+      <button id="backToAddExStep1Btn" class="btn-icon" style="border:none; background:none;">
+        <svg viewBox="0 0 24 24"><path d="M20,11H7.83L13.41,5.41L12,4L5,11L12,18L13.41,16.59L7.83,13H20V11Z"/></svg>
+      </button>
+      <h3 id="step2ModalTitle">Cargar Series</h3>
+      <div style="width:40px;"></div> <!-- Spacer to center title -->
+    </div>
+    <div class="modal-body">
+      <div class="log-sets-container">
+        
+        <div class="selected-ex-header">
+          <div id="step2AnimContainer" class="anim-container">
+            <!-- Injected dynamically -->
+          </div>
+          <div>
+            <h4 id="step2ExerciseName">Nombre Ejercicio</h4>
+            <div class="chip-group">
+              <span id="step2MuscleChip" class="chip active-chip">Pecho</span>
+              <span id="step2EquipmentChip" class="chip">Mancuernas</span>
+            </div>
+          </div>
+        </div>
+
+        <table class="sets-table">
+          <thead>
+            <tr>
+              <th style="width: 50px;">Serie</th>
+              <th>Peso (kg)</th>
+              <th>Reps</th>
+              <th style="width: 40px; text-align: center;"></th>
+            </tr>
+          </thead>
+          <tbody id="setsTableBody">
+            <!-- Set rows injected dynamically -->
+          </tbody>
+        </table>
+
+        <button id="addSetRowBtn" class="btn-secondary" style="margin-top: 8px;">＋ Serie</button>
+        
+        <div style="display: flex; gap: 12px; margin-top: 24px;">
+          <button id="cancelLogSetsBtn" class="btn-secondary">Cancelar</button>
+          <button id="saveSessionBtn" class="btn-primary">Guardar</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SUPPLEMENT DAY SELECTION -->
+  <div id="addSuppModal" class="modal-fullscreen">
+    <div class="modal-header">
+      <button id="closeSuppModalBtn" class="btn-icon" style="border:none; background:none;">
+        <svg viewBox="0 0 24 24"><path d="M19,6.41L17.59,5L12,10.59L6.41,5L5,6.41L10.59,12L5,17.59L6.41,19L12,13.41L17.59,19L19,17.59L13.41,12L19,6.41Z"/></svg>
+      </button>
+      <div>
+        <h3 style="margin:0; font-size:1.05rem;">Suplementos del día</h3>
+        <div id="suppModalDateLabel" style="font-size:0.8rem; color:var(--text-sec); margin-top:2px;"></div>
+      </div>
+      <div style="width:40px;"></div>
+    </div>
+    <div class="modal-body" style="padding-top: 8px;">
+      <p style="font-size:0.82rem; color:var(--text-sec); margin-bottom:16px;">Tocá los suplementos que tomaste hoy para marcarlos. Los que ya estaban marcados aparecen resaltados.</p>
+      <div id="suppModalList" class="supp-modal-list">
+        <!-- Items injected dynamically -->
+      </div>
+      <button id="saveSuppModalBtn" class="btn-primary" style="margin-top:24px; width:100%;">
+        Guardar
+      </button>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="successToast" class="toast-container">
+    <span style="font-size: 1.1rem;">✓</span>
+    <span id="toastMessage">Sesión guardada</span>
+  </div>
+
+  <!-- JS Logic Layer -->
+  <script src="app.js" defer></script>
+</body>
+</html>
