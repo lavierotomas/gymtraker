@@ -148,6 +148,30 @@
             <circle cx="74" cy="66" r="7" class="anim-weight" />
           </g>
         </svg>
+      `,
+      crunch: `
+        <svg class="anim-crunch-svg" viewBox="0 0 100 100">
+          <line x1="10" y1="78" x2="90" y2="78" class="anim-bench" />
+          <line x1="20" y1="78" x2="35" y2="60" class="anim-path" />
+          <line x1="35" y1="60" x2="50" y2="78" class="anim-path" />
+          <g class="anim-crunch">
+            <line x1="50" y1="78" x2="77" y2="70" class="anim-path" />
+            <circle cx="82" cy="65" r="5" class="anim-path" />
+            <line x1="77" y1="70" x2="73" y2="58" class="anim-path" />
+          </g>
+        </svg>
+      `,
+      plank: `
+        <svg class="anim-plank-svg" viewBox="0 0 100 100">
+          <line x1="10" y1="78" x2="90" y2="78" class="anim-bench" />
+          <g class="anim-plank">
+            <line x1="20" y1="78" x2="22" y2="70" class="anim-path" />
+            <line x1="70" y1="78" x2="70" y2="68" class="anim-path" />
+            <line x1="70" y1="68" x2="74" y2="68" class="anim-path" />
+            <line x1="22" y1="70" x2="74" y2="70" class="anim-path" style="stroke-width:4px;" />
+            <circle cx="79" cy="67" r="5" class="anim-path" />
+          </g>
+        </svg>
       `
     };
 
@@ -222,7 +246,14 @@
       { id: "abductores", name: "Abductores", group: "Piernas", equipment: "Máquina/Panda", description: "Abre las piernas contra la resistencia para enfocar el glúteo medio.", animationType: "squat" },
       { id: "zancadas_lunges", name: "Zancadas / Lunges", group: "Piernas", equipment: "Mancuernas", description: "Da un paso adelante descendiendo la cadera hasta flexionar ambas piernas a 90 grados.", animationType: "squat" },
       { id: "hip_thrust", name: "Hip thrust", group: "Piernas", equipment: "Barra", description: "Con la espalda alta apoyada en un banco, empuja la pelvis hacia arriba con la barra en la cadera.", animationType: "deadlift" },
-      { id: "sentadilla_bulgara", name: "Sentadilla búlgara", group: "Piernas", equipment: "Mancuernas", description: "Sentadilla a una pierna apoyando la punta del pie trasero en un banco elevado.", animationType: "squat" }
+      { id: "sentadilla_bulgara", name: "Sentadilla búlgara", group: "Piernas", equipment: "Mancuernas", description: "Sentadilla a una pierna apoyando la punta del pie trasero en un banco elevado.", animationType: "squat" },
+      
+      // Abdominales
+      { id: "abdominales_crunches", name: "Abdominales (crunches)", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba con rodillas flexionadas, eleva los hombros del suelo contrayendo el abdomen.", animationType: "crunch" },
+      { id: "plancha_baja", name: "Plancha baja", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en línea recta apoyado en antebrazos y puntas de los pies. Mantén el abdomen contraído.", animationType: "plank" },
+      { id: "plancha_alta", name: "Plancha alta", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en posición de flexión de brazos con los codos completamente extendidos.", animationType: "plank" },
+      { id: "elevaciones_piernas", name: "Elevaciones de piernas", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba, eleva las piernas estiradas hasta los 90 grados y desciende de forma controlada.", animationType: "crunch" },
+      { id: "giros_rusos", name: "Giros rusos", group: "Abdominales", equipment: "Peso corporal", description: "Sentado con el torso inclinado hacia atrás y pies elevados, rota el torso de lado a lado.", animationType: "crunch" }
     ];
 
     /***************************************************************************
@@ -435,6 +466,20 @@
           localStorage.setItem('gymtracker_supplog', JSON.stringify(suppLogData));
           localStorage.setItem('gymtracker_last_modified', new Date().toISOString());
         } catch (e) {}
+      },
+      getRoutines: () => {
+        try {
+          const routinesStr = localStorage.getItem('gymtracker_routines');
+          return routinesStr ? JSON.parse(routinesStr) : [];
+        } catch (e) {
+          return [];
+        }
+      },
+      setRoutines: (routinesData) => {
+        try {
+          localStorage.setItem('gymtracker_routines', JSON.stringify(routinesData));
+          localStorage.setItem('gymtracker_last_modified', new Date().toISOString());
+        } catch (e) {}
       }
     };
 
@@ -445,6 +490,7 @@
     let sessions = {};
     let bodyLog = [];
     let supplementLog = {}; // { "YYYY-MM-DD": ["suppId1", ...] }
+    let routines = [];
     let currentSelectedDate = new Date();
     let calendarMonthYear = new Date();
     let currentActiveView = "perfil";
@@ -452,6 +498,21 @@
 
     let authMode = 'login'; // 'login' or 'register'
     let activeSyncStatus = 'offline'; // 'offline', 'synced', 'pending'
+
+    // Inactivity warning
+    let inactivityTimer = null;
+    let countdownInterval = null;
+
+    // Stopwatch and rest timer state
+    let stopwatchInterval = null;
+    let stopwatchTime = 0; // centiseconds
+    let stopwatchRunning = false;
+    let stopwatchLaps = [];
+
+    let timerInterval = null;
+    let timerTime = 90; // default 1:30 in seconds
+    let timerRunning = false;
+    let timerOriginalTime = 90;
 
     /***************************************************************************
      * 3. INITIALIZATION & ROUTING
@@ -463,6 +524,8 @@
 
       // Register all event listeners immediately so UI is always interactive
       registerGlobalEvents();
+      initInactivityTracker();
+      initStopwatchAndTimer();
       window.addEventListener('resize', handleChartsResize);
 
       // Check for saved session
@@ -478,6 +541,7 @@
             sessions = storage.getSessions();
             bodyLog = storage.getBodyLog();
             supplementLog = storage.getSupplementLog();
+            routines = storage.getRoutines();
 
             if (!currentUser || !currentUser.name) {
               showWelcomeScreen();
@@ -507,6 +571,8 @@
       document.getElementById('view-calendario').style.display = 'none';
       document.getElementById('view-progreso').style.display = 'none';
       document.getElementById('view-ejercicios').style.display = 'none';
+      document.getElementById('view-suplementos').style.display = 'none';
+      document.getElementById('view-rutinas').style.display = 'none';
     }
 
     function showWelcomeScreen() {
@@ -526,6 +592,7 @@
       document.getElementById('view-progreso').style.display = '';
       document.getElementById('view-ejercicios').style.display = '';
       document.getElementById('view-suplementos').style.display = '';
+      document.getElementById('view-rutinas').style.display = '';
     }
 
     function switchView(viewName) {
@@ -533,7 +600,15 @@
       
       // Close open drawers and modals upon navigation
       closeDayDetailPanel();
-      const modalIds = ['addExerciseModalStep1', 'addExerciseModalStep2', 'addSuppModal', 'measuresModal'];
+      const modalIds = [
+        'addExerciseModalStep1', 
+        'addExerciseModalStep2', 
+        'addSuppModal', 
+        'measuresModal',
+        'routineModal',
+        'routineExerciseSelectorModal',
+        'loadRoutineModal'
+      ];
       modalIds.forEach(id => {
         const el = document.getElementById(id);
         if (el) el.classList.remove('open');
@@ -569,6 +644,8 @@
         renderExerciseLibrary();
       } else if (viewName === "suplementos") {
         renderSupplementLibrary();
+      } else if (viewName === "rutinas") {
+        renderRoutines();
       }
     }
 
@@ -741,7 +818,8 @@
         user_id: userId,
         user_data: {
           profile: currentUser || {},
-          supplementLog: supplementLog || {}
+          supplementLog: supplementLog || {},
+          routines: routines || []
         },
         sessions_data: sessions || {},
         bodylog_data: bodyLog || [],
@@ -771,9 +849,11 @@
       if (userData.profile !== undefined) {
         currentUser = userData.profile;
         supplementLog = userData.supplementLog || {};
+        routines = userData.routines || [];
       } else {
         currentUser = userData;
         supplementLog = {};
+        routines = [];
       }
 
       sessions = remoteData.sessions_data || {};
@@ -784,6 +864,7 @@
       localStorage.setItem('gymtracker_sessions', JSON.stringify(sessions));
       localStorage.setItem('gymtracker_bodylog', JSON.stringify(bodyLog));
       localStorage.setItem('gymtracker_supplog', JSON.stringify(supplementLog));
+      localStorage.setItem('gymtracker_routines', JSON.stringify(routines));
 
       localStorage.setItem('gymtracker_last_modified', remoteData.updated_at);
       localStorage.setItem('gymtracker_last_sync', new Date().toISOString());
@@ -1021,26 +1102,30 @@
 
       // Logout Button
       document.getElementById('logoutBtn').addEventListener('click', () => {
-        if (confirm("¿Estás seguro de que querés cerrar sesión? Se eliminarán los datos locales de este dispositivo (asegurate de haber sincronizado).")) {
-          if (syncIntervalId) {
-            clearInterval(syncIntervalId);
-            syncIntervalId = null;
+        showCustomConfirm(
+          "Cerrar Sesión",
+          "¿Estás seguro de que querés cerrar sesión? Se eliminarán los datos locales de este dispositivo (asegurate de haber sincronizado).",
+          () => {
+            if (syncIntervalId) {
+              clearInterval(syncIntervalId);
+              syncIntervalId = null;
+            }
+            storage.setSession(null);
+            localStorage.removeItem('gymtracker_user');
+            localStorage.removeItem('gymtracker_sessions');
+            localStorage.removeItem('gymtracker_bodylog');
+            localStorage.removeItem('gymtracker_last_modified');
+            localStorage.removeItem('gymtracker_last_sync');
+            currentUser = null;
+            sessions = {};
+            bodyLog = [];
+            supplementLog = {};
+            localStorage.removeItem('gymtracker_supplog');
+            
+            showAuthScreen();
+            showToast("Sesión cerrada");
           }
-          storage.setSession(null);
-          localStorage.removeItem('gymtracker_user');
-          localStorage.removeItem('gymtracker_sessions');
-          localStorage.removeItem('gymtracker_bodylog');
-          localStorage.removeItem('gymtracker_last_modified');
-          localStorage.removeItem('gymtracker_last_sync');
-          currentUser = null;
-          sessions = {};
-          bodyLog = [];
-          supplementLog = {};
-          localStorage.removeItem('gymtracker_supplog');
-          
-          showAuthScreen();
-          showToast("Sesión cerrada");
-        }
+        );
       });
 
       // Calendar controls
@@ -1124,6 +1209,65 @@
       if (closeSuppModalBtn) closeSuppModalBtn.addEventListener('click', function() {
         document.getElementById('addSuppModal').classList.remove('open');
       });
+
+      // ── Routines Tab Event Listeners ──
+      const addRoutineFab = document.getElementById('addRoutineFab');
+      if (addRoutineFab) {
+        addRoutineFab.addEventListener('click', () => {
+          currentEditingRoutineIndex = null;
+          document.getElementById('routineModalTitle').textContent = "Crear Rutina";
+          document.getElementById('routineNameInput').value = '';
+          routineSelectedExercises = [];
+          renderRoutineSelectedExercises();
+          document.getElementById('routineModal').classList.add('open');
+        });
+      }
+
+      const closeRoutineModalBtn = document.getElementById('closeRoutineModalBtn');
+      if (closeRoutineModalBtn) {
+        closeRoutineModalBtn.addEventListener('click', () => {
+          document.getElementById('routineModal').classList.remove('open');
+        });
+      }
+
+      const routineAddExerciseBtn = document.getElementById('routineAddExerciseBtn');
+      if (routineAddExerciseBtn) {
+        routineAddExerciseBtn.addEventListener('click', openRoutineExerciseSelector);
+      }
+
+      const closeRoutineExSelModalBtn = document.getElementById('closeRoutineExSelModalBtn');
+      if (closeRoutineExSelModalBtn) {
+        closeRoutineExSelModalBtn.addEventListener('click', () => {
+          document.getElementById('routineExerciseSelectorModal').classList.remove('open');
+        });
+      }
+
+      const routineExSearchInput = document.getElementById('routineExSearchInput');
+      if (routineExSearchInput) {
+        routineExSearchInput.addEventListener('input', () => {
+          const activeChip = document.querySelector('#routineExMuscleChips .active-chip');
+          const group = activeChip ? activeChip.textContent : "Todos";
+          renderRoutineExSelectorAccordion(group);
+        });
+      }
+
+      const saveRoutineBtn = document.getElementById('saveRoutineBtn');
+      if (saveRoutineBtn) {
+        saveRoutineBtn.addEventListener('click', saveRoutine);
+      }
+
+      // Day Detail - Load Routine button
+      const openLoadRoutineModalBtn = document.getElementById('openLoadRoutineModalBtn');
+      if (openLoadRoutineModalBtn) {
+        openLoadRoutineModalBtn.addEventListener('click', openLoadRoutineModal);
+      }
+
+      const closeLoadRoutineModalBtn = document.getElementById('closeLoadRoutineModalBtn');
+      if (closeLoadRoutineModalBtn) {
+        closeLoadRoutineModalBtn.addEventListener('click', () => {
+          document.getElementById('loadRoutineModal').classList.remove('open');
+        });
+      }
     }
 
     /***************************************************************************
@@ -1372,10 +1516,12 @@
           
           let setsHtml = '';
           entry.sets.forEach((set, sIdx) => {
+            const weightText = exInfo.equipment === "Peso corporal" ? "Peso Corporal" : `${set.weight} kg`;
+            const repsText = exInfo.animationType === "plank" ? `${set.reps} seg` : `${set.reps} reps`;
             setsHtml += `
               <div class="set-summary-row">
                 <span>Serie ${sIdx + 1}</span>
-                <span>${set.weight} kg × ${set.reps} reps</span>
+                <span>${weightText} × ${repsText}</span>
               </div>
             `;
           });
@@ -1589,7 +1735,7 @@
       const container = document.getElementById('addExMuscleChips');
       container.innerHTML = '';
 
-      const groups = ["Todos", "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas"];
+      const groups = ["Todos", "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas", "Abdominales"];
       groups.forEach(group => {
         const chip = document.createElement('button');
         chip.className = `chip ${group === "Todos" ? "active-chip" : ""}`;
@@ -1608,7 +1754,7 @@
       container.innerHTML = '';
 
       const query = document.getElementById('addExSearchInput').value.trim().toLowerCase();
-      const muscleGroups = ["Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas"];
+      const muscleGroups = ["Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas", "Abdominales"];
 
       muscleGroups.forEach(group => {
         if (filterMuscleGroup !== "Todos" && filterMuscleGroup !== group) return;
@@ -1689,18 +1835,36 @@
       renderStep1ExercisesAccordion(activeGroup);
     }
 
+    let currentExerciseStep2 = null;
+
     function openStep2(exercise) {
       document.getElementById('addExerciseModalStep1').classList.remove('open');
       openAddExerciseStep2(exercise);
     }
 
     function openAddExerciseStep2(exercise, existingSets = null) {
+      currentExerciseStep2 = exercise;
       document.getElementById('step2ExerciseName').textContent = exercise.name;
       document.getElementById('step2MuscleChip').textContent = exercise.group;
       document.getElementById('step2EquipmentChip').textContent = exercise.equipment;
       
       document.getElementById('step2AnimContainer').innerHTML = getAnimationSVG(exercise.animationType);
       document.getElementById('saveSessionBtn').setAttribute('data-ex-id', exercise.id);
+
+      // Update table headers for bodyweight and isometric
+      const headers = document.querySelectorAll('#addExerciseModalStep2 .sets-table th');
+      if (headers.length >= 3) {
+        if (exercise.equipment === "Peso corporal") {
+          headers[1].textContent = "Peso (Corporal)";
+        } else {
+          headers[1].textContent = "Peso (kg)";
+        }
+        if (exercise.animationType === "plank") {
+          headers[2].textContent = "Segundos";
+        } else {
+          headers[2].textContent = "Reps";
+        }
+      }
 
       const tableBody = document.getElementById('setsTableBody');
       tableBody.innerHTML = '';
@@ -1726,13 +1890,18 @@
 
       const row = document.createElement('tr');
       row.className = 'set-row';
+      
+      const isBodyweight = currentExerciseStep2 && currentExerciseStep2.equipment === "Peso corporal";
+      const displayWeight = isBodyweight ? 0 : weight;
+      const weightDisabledAttr = isBodyweight ? "disabled" : "";
+
       row.innerHTML = `
         <td><span class="set-number-label">${rowCount + 1}</span></td>
         <td>
           <div class="set-row-stepper">
-            <button type="button" class="btn-step-minus-weight">−</button>
-            <input type="number" class="set-weight-input" step="2.5" min="0" max="999" value="${weight > 0 ? weight : ''}" placeholder="0">
-            <button type="button" class="btn-step-plus-weight">＋</button>
+            <button type="button" class="btn-step-minus-weight" ${weightDisabledAttr}>−</button>
+            <input type="number" class="set-weight-input" step="2.5" min="0" max="999" value="${isBodyweight ? 0 : (displayWeight > 0 ? displayWeight : '')}" placeholder="${isBodyweight ? '0' : '0'}" ${weightDisabledAttr}>
+            <button type="button" class="btn-step-plus-weight" ${weightDisabledAttr}>＋</button>
           </div>
         </td>
         <td>
@@ -1753,11 +1922,13 @@
       const repsInput = row.querySelector('.set-reps-input');
 
       row.querySelector('.btn-step-minus-weight').addEventListener('click', () => {
+        if (isBodyweight) return;
         let val = parseFloat(weightInput.value) || 0;
         val = Math.max(0, val - 2.5);
         weightInput.value = val % 1 === 0 ? val : val.toFixed(1);
       });
       row.querySelector('.btn-step-plus-weight').addEventListener('click', () => {
+        if (isBodyweight) return;
         let val = parseFloat(weightInput.value) || 0;
         val = val + 2.5;
         weightInput.value = val % 1 === 0 ? val : val.toFixed(1);
@@ -1791,8 +1962,15 @@
       let valid = true;
 
       rows.forEach((row) => {
-        const weightVal = parseFloat(row.querySelector('.set-weight-input').value);
-        const repsVal = parseInt(row.querySelector('.set-reps-input').value);
+        const weightInputEl = row.querySelector('.set-weight-input');
+        const repsInputEl = row.querySelector('.set-reps-input');
+        
+        let weightVal = parseFloat(weightInputEl.value);
+        if (weightInputEl.disabled || weightInputEl.readOnly) {
+          weightVal = 0;
+        }
+        
+        const repsVal = parseInt(repsInputEl.value);
 
         if (isNaN(weightVal) || isNaN(repsVal) || weightVal < 0 || repsVal <= 0) {
           valid = false;
@@ -2479,7 +2657,7 @@
       const container = document.getElementById('libMuscleChips');
       if (container.children.length > 0) return;
 
-      const groups = ["Todos", "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas"];
+      const groups = ["Todos", "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas", "Abdominales"];
       groups.forEach((group, idx) => {
         const chip = document.createElement('button');
         chip.className = `chip ${idx === 0 ? "active-chip" : ""}`;
@@ -2665,6 +2843,43 @@
       }, 2500);
     }
 
+    function showCustomConfirm(title, message, onYes, onNo = null) {
+      const modal = document.getElementById('customConfirmModal');
+      const titleEl = document.getElementById('confirmTitle');
+      const msgEl = document.getElementById('confirmMessage');
+      const yesBtn = document.getElementById('confirmYesBtn');
+      const noBtn = document.getElementById('confirmNoBtn');
+
+      if (!modal || !titleEl || !msgEl || !yesBtn || !noBtn) {
+        if (confirm(message)) {
+          onYes();
+        } else if (onNo) {
+          onNo();
+        }
+        return;
+      }
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+
+      const newYesBtn = yesBtn.cloneNode(true);
+      const newNoBtn = noBtn.cloneNode(true);
+      yesBtn.parentNode.replaceChild(newYesBtn, yesBtn);
+      noBtn.parentNode.replaceChild(newNoBtn, noBtn);
+
+      newYesBtn.addEventListener('click', () => {
+        modal.classList.remove('open');
+        onYes();
+      });
+
+      newNoBtn.addEventListener('click', () => {
+        modal.classList.remove('open');
+        if (onNo) onNo();
+      });
+
+      modal.classList.add('open');
+    }
+
     function initTheme() {
       const savedTheme = localStorage.getItem('gymtracker_theme');
       const themeToggleBtn = document.getElementById('themeToggleBtn');
@@ -2711,5 +2926,658 @@
         // Path for Moon Icon
         icon.innerHTML = `<path d="M12,18C11.11,18 10.26,17.8 9.5,17.45C11.56,16.5 13,14.42 13,12C13,9.58 11.56,7.5 9.5,6.55C10.26,6.2 11.11,6 12,6A6,6 0 0,1 18,12A6,6 0 0,1 12,18M20,8.69V4H15.31L12,0.69L8.69,4H4V8.69L0.69,12L4,15.31V20H8.69L12,23.31L15.31,20H20V15.31L23.31,12L20,8.69Z"/>`;
       }
+    }
+
+    /***************************************************************************
+     * 13. INACTIVITY TIMER & AUTO-LOGOUT
+     **************************************************************************/
+    function initInactivityTracker() {
+      const INACTIVITY_TIME = 15 * 60 * 1000; // 15 minutes in ms
+      const WARNING_TIME = 60; // 60 seconds
+
+      let warningActive = false;
+      let secondsLeft = WARNING_TIME;
+
+      function resetTimer() {
+        if (!currentUser) return; // Don't run timer if logged out
+        if (warningActive) return;
+        clearTimeout(inactivityTimer);
+        inactivityTimer = setTimeout(showInactivityWarning, INACTIVITY_TIME);
+      }
+
+      function showInactivityWarning() {
+        warningActive = true;
+        secondsLeft = WARNING_TIME;
+        const overlay = document.getElementById('inactivityOverlay');
+        const countdownEl = document.getElementById('inactivityCountdown');
+        
+        if (overlay) overlay.classList.add('open');
+        if (countdownEl) countdownEl.textContent = secondsLeft;
+
+        clearInterval(countdownInterval);
+        countdownInterval = setInterval(() => {
+          secondsLeft--;
+          if (countdownEl) countdownEl.textContent = secondsLeft;
+
+          if (secondsLeft <= 0) {
+            clearInterval(countdownInterval);
+            autoLogout();
+          }
+        }, 1000);
+      }
+
+      function extendSession() {
+        warningActive = false;
+        clearInterval(countdownInterval);
+        const overlay = document.getElementById('inactivityOverlay');
+        if (overlay) overlay.classList.remove('open');
+        resetTimer();
+        showToast("Sesión extendida");
+      }
+
+      function autoLogout() {
+        warningActive = false;
+        const overlay = document.getElementById('inactivityOverlay');
+        if (overlay) overlay.classList.remove('open');
+        
+        // Clear session and data
+        if (syncIntervalId) {
+          clearInterval(syncIntervalId);
+          syncIntervalId = null;
+        }
+        storage.setSession(null);
+        localStorage.removeItem('gymtracker_user');
+        localStorage.removeItem('gymtracker_sessions');
+        localStorage.removeItem('gymtracker_bodylog');
+        localStorage.removeItem('gymtracker_last_modified');
+        localStorage.removeItem('gymtracker_last_sync');
+        currentUser = null;
+        sessions = {};
+        bodyLog = [];
+        supplementLog = {};
+        localStorage.removeItem('gymtracker_supplog');
+        
+        showAuthScreen();
+        showToast("Sesión cerrada por inactividad");
+      }
+
+      // Add event listeners for user activity
+      const events = ['mousemove', 'keydown', 'click', 'touchstart', 'scroll'];
+      events.forEach(event => {
+        window.addEventListener(event, resetTimer, { passive: true });
+      });
+
+      // Bind extend session button
+      const extendBtn = document.getElementById('extendSessionBtn');
+      if (extendBtn) {
+        extendBtn.addEventListener('click', extendSession);
+      }
+
+      // Start initial timer
+      resetTimer();
+    }
+
+    /***************************************************************************
+     * 14. STOPWATCH & REST TIMER DRAWER
+     **************************************************************************/
+    function playBeep() {
+      try {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        const ctx = new AudioContext();
+        
+        const playTone = (time, duration, frequency) => {
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          osc.type = 'sine';
+          osc.frequency.value = frequency;
+          
+          gain.gain.setValueAtTime(0.3, time);
+          gain.gain.exponentialRampToValueAtTime(0.01, time + duration - 0.05);
+          
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          
+          osc.start(time);
+          osc.stop(time + duration);
+        };
+        
+        const now = ctx.currentTime;
+        playTone(now, 0.25, 880);      // High pitch A5
+        playTone(now + 0.3, 0.35, 880); // Another A5
+      } catch (e) {
+        console.error("AudioContext error:", e);
+      }
+    }
+
+    function initStopwatchAndTimer() {
+      // ── Stopwatch Logic ──
+      const stopwatchDisplay = document.getElementById('stopwatchDisplay');
+      const startBtn = document.getElementById('stopwatchStartBtn');
+      const lapBtn = document.getElementById('stopwatchLapBtn');
+      const resetBtn = document.getElementById('stopwatchResetBtn');
+      const lapsList = document.getElementById('stopwatchLapsList');
+
+      function updateStopwatchUI() {
+        const mins = Math.floor(stopwatchTime / 6000).toString().padStart(2, '0');
+        const secs = Math.floor((stopwatchTime % 6000) / 100).toString().padStart(2, '0');
+        const centis = (stopwatchTime % 100).toString().padStart(2, '0');
+        if (stopwatchDisplay) {
+          stopwatchDisplay.textContent = `${mins}:${secs}.${centis}`;
+        }
+      }
+
+      startBtn.addEventListener('click', () => {
+        if (stopwatchRunning) {
+          // Pause
+          clearInterval(stopwatchInterval);
+          stopwatchRunning = false;
+          startBtn.textContent = 'Iniciar';
+          lapBtn.disabled = true;
+        } else {
+          // Start
+          stopwatchRunning = true;
+          startBtn.textContent = 'Pausar';
+          lapBtn.disabled = false;
+          const startTime = Date.now() - stopwatchTime * 10;
+          stopwatchInterval = setInterval(() => {
+            stopwatchTime = Math.floor((Date.now() - startTime) / 10);
+            updateStopwatchUI();
+          }, 10);
+        }
+      });
+
+      lapBtn.addEventListener('click', () => {
+        if (!stopwatchRunning) return;
+        const lapNum = stopwatchLaps.length + 1;
+        const mins = Math.floor(stopwatchTime / 6000).toString().padStart(2, '0');
+        const secs = Math.floor((stopwatchTime % 6000) / 100).toString().padStart(2, '0');
+        const centis = (stopwatchTime % 100).toString().padStart(2, '0');
+        const lapTime = `${mins}:${secs}.${centis}`;
+        stopwatchLaps.push(lapTime);
+
+        const lapEl = document.createElement('div');
+        lapEl.style.padding = '4px 8px';
+        lapEl.style.background = 'rgba(255,255,255,0.02)';
+        lapEl.style.borderBottom = '1px solid var(--border)';
+        lapEl.innerHTML = `<span style="color:var(--text-sec);">Vuelta ${lapNum}:</span> <span style="float:right; font-weight:bold; color:var(--accent);">${lapTime}</span>`;
+        lapsList.appendChild(lapEl);
+        lapsList.scrollTop = lapsList.scrollHeight;
+      });
+
+      resetBtn.addEventListener('click', () => {
+        clearInterval(stopwatchInterval);
+        stopwatchRunning = false;
+        stopwatchTime = 0;
+        stopwatchLaps = [];
+        startBtn.textContent = 'Iniciar';
+        lapBtn.disabled = true;
+        updateStopwatchUI();
+        lapsList.innerHTML = '';
+      });
+
+      // ── Rest Timer Logic ──
+      const timerDisplay = document.getElementById('timerDisplay');
+      const timerStartBtn = document.getElementById('timerStartBtn');
+      const timerResetBtn = document.getElementById('timerResetBtn');
+      const customMinInput = document.getElementById('timerMinInput');
+      const customSecInput = document.getElementById('timerSecInput');
+      const setTimerBtn = document.getElementById('setTimerBtn');
+
+      function updateTimerUI() {
+        const mins = Math.floor(timerTime / 60).toString().padStart(2, '0');
+        const secs = (timerTime % 60).toString().padStart(2, '0');
+        if (timerDisplay) {
+          timerDisplay.textContent = `${mins}:${secs}`;
+        }
+      }
+
+      function flashScreen() {
+        const drawer = document.getElementById('timerDrawer');
+        if (!drawer) return;
+        let flashes = 6;
+        const interval = setInterval(() => {
+          if (flashes % 2 === 0) {
+            drawer.style.background = 'rgba(255, 68, 68, 0.2)';
+          } else {
+            drawer.style.background = 'var(--surface)';
+          }
+          flashes--;
+          if (flashes <= 0) {
+            clearInterval(interval);
+            drawer.style.background = '';
+          }
+        }, 300);
+      }
+
+      timerStartBtn.addEventListener('click', () => {
+        if (timerRunning) {
+          // Pause
+          clearInterval(timerInterval);
+          timerRunning = false;
+          timerStartBtn.textContent = 'Iniciar';
+        } else {
+          // Start
+          if (timerTime <= 0) return;
+          timerRunning = true;
+          timerStartBtn.textContent = 'Pausar';
+          timerInterval = setInterval(() => {
+            timerTime--;
+            updateTimerUI();
+
+            if (timerTime <= 0) {
+              clearInterval(timerInterval);
+              timerRunning = false;
+              timerStartBtn.textContent = 'Iniciar';
+              playBeep();
+              flashScreen();
+              showToast("¡Tiempo de descanso finalizado!");
+              timerTime = timerOriginalTime;
+              updateTimerUI();
+            }
+          }, 1000);
+        }
+      });
+
+      timerResetBtn.addEventListener('click', () => {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        timerStartBtn.textContent = 'Iniciar';
+        timerTime = timerOriginalTime;
+        updateTimerUI();
+      });
+
+      setTimerBtn.addEventListener('click', () => {
+        const mins = parseInt(customMinInput.value) || 0;
+        const secs = parseInt(customSecInput.value) || 0;
+        const total = mins * 60 + secs;
+        if (total > 0) {
+          clearInterval(timerInterval);
+          timerRunning = false;
+          timerStartBtn.textContent = 'Iniciar';
+          timerTime = total;
+          timerOriginalTime = total;
+          updateTimerUI();
+          showToast(`Temporizador ajustado a ${mins}m ${secs}s`);
+        }
+      });
+
+      // Quick presets
+      document.querySelectorAll('.btn-quick-time').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          document.querySelectorAll('.btn-quick-time').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+
+          const secs = parseInt(btn.getAttribute('data-secs')) || 90;
+          clearInterval(timerInterval);
+          timerRunning = false;
+          timerStartBtn.textContent = 'Iniciar';
+          timerTime = secs;
+          timerOriginalTime = secs;
+          updateTimerUI();
+          showToast(`Descanso: ${Math.floor(secs / 60)}m ${secs % 60}s`);
+        });
+      });
+
+      // ── Digital Clock ──
+      const clockDisplay = document.getElementById('clockDisplay');
+      setInterval(() => {
+        const now = new Date();
+        const hrs = now.getHours().toString().padStart(2, '0');
+        const mins = now.getMinutes().toString().padStart(2, '0');
+        const secs = now.getSeconds().toString().padStart(2, '0');
+        if (clockDisplay) {
+          clockDisplay.textContent = `${hrs}:${mins}:${secs}`;
+        }
+      }, 1000);
+
+      // Drawer open/close
+      const drawer = document.getElementById('timerDrawer');
+      const overlay = document.getElementById('timerOverlay');
+      const toggleBtn = document.getElementById('timerToggleBtn');
+      const closeBtn = document.getElementById('closeTimerDrawerBtn');
+
+      function openDrawer() {
+        drawer.classList.add('open');
+        overlay.classList.add('open');
+      }
+
+      function closeDrawer() {
+        drawer.classList.remove('open');
+        overlay.classList.remove('open');
+      }
+
+      toggleBtn.addEventListener('click', openDrawer);
+      closeBtn.addEventListener('click', closeDrawer);
+      overlay.addEventListener('click', closeDrawer);
+    }
+
+    /***************************************************************************
+     * 15. PREDEFINED ROUTINES VIEW & CRUD
+     **************************************************************************/
+    let currentEditingRoutineIndex = null;
+    let routineSelectedExercises = [];
+
+    function renderRoutines() {
+      const container = document.getElementById('routinesContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (routines.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1; padding: 40px 20px;">
+            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: var(--border); margin-bottom: 16px;"><path d="M19,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M19,19H5V8H19V19M17,12H12V17H17V12Z"/></svg>
+            <p style="color:var(--text-sec); font-weight:500;">No tenés rutinas creadas</p>
+            <p style="font-size:0.8rem; color:var(--text-sec); margin-top:4px;">Tocá el botón "+" abajo para crear tu primera rutina</p>
+          </div>
+        `;
+        return;
+      }
+
+      routines.forEach((routine, rIdx) => {
+        const muscleGroups = [];
+        routine.exercises.forEach(exId => {
+          const ex = EXERCISES.find(e => e.id === exId);
+          if (ex && !muscleGroups.includes(ex.group)) {
+            muscleGroups.push(ex.group);
+          }
+        });
+
+        const card = document.createElement('div');
+        card.className = 'routine-card';
+        
+        let chipsHtml = '';
+        muscleGroups.forEach(g => {
+          chipsHtml += `<span class="chip active-chip">${g}</span>`;
+        });
+
+        card.innerHTML = `
+          <div class="routine-card-header">
+            <h3 class="routine-card-title">${routine.name}</h3>
+            <div class="routine-card-actions">
+              <button class="btn-action-small" onclick="editRoutine(${rIdx})" aria-label="Editar">
+                <svg viewBox="0 0 24 24"><path d="M20.71,7.04C21.1,6.65 21.1,6 20.71,5.63L18.37,3.29C18,2.9 17.35,2.9 16.96,3.29L15.12,5.12L18.87,8.87M3,17.25V21H6.75L17.81,9.93L14.07,6.19L3,17.25Z"/></svg>
+              </button>
+              <button class="btn-action-small danger" onclick="deleteRoutine(${rIdx})" aria-label="Eliminar">
+                <svg viewBox="0 0 24 24"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+              </button>
+            </div>
+          </div>
+          <div class="routine-card-body">
+            <span class="routine-exercise-count">📋 ${routine.exercises.length} ejercicios</span>
+            <div class="routine-muscle-chips">
+              ${chipsHtml}
+            </div>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    window.editRoutine = function(index) {
+      currentEditingRoutineIndex = index;
+      const routine = routines[index];
+      
+      document.getElementById('routineModalTitle').textContent = "Editar Rutina";
+      document.getElementById('routineNameInput').value = routine.name;
+      routineSelectedExercises = [...routine.exercises];
+      
+      renderRoutineSelectedExercises();
+      document.getElementById('routineModal').classList.add('open');
+    };
+
+    window.deleteRoutine = function(index) {
+      showCustomConfirm(
+        "Eliminar Rutina",
+        "¿Estás seguro de que querés eliminar esta rutina?",
+        () => {
+          routines.splice(index, 1);
+          storage.setRoutines(routines);
+          renderRoutines();
+          showToast("Rutina eliminada");
+          syncWithCloud();
+        }
+      );
+    };
+
+    function renderRoutineSelectedExercises() {
+      const container = document.getElementById('routineSelectedExercisesList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (routineSelectedExercises.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:20px; color:var(--text-sec); font-size:0.82rem;">
+            Sin ejercicios seleccionados
+          </div>
+        `;
+        return;
+      }
+
+      routineSelectedExercises.forEach((exId, idx) => {
+        const ex = EXERCISES.find(e => e.id === exId);
+        if (!ex) return;
+
+        const row = document.createElement('div');
+        row.className = 'routine-selected-item';
+        row.innerHTML = `
+          <div class="routine-selected-item-info">
+            <span class="routine-selected-item-name">${ex.name}</span>
+            <span class="routine-selected-item-meta">${ex.group} • ${ex.equipment}</span>
+          </div>
+          <div class="routine-selected-item-actions">
+            <button class="btn-action-small" onclick="moveRoutineExercise(${idx}, -1)" ${idx === 0 ? 'disabled' : ''} style="padding: 4px;">▲</button>
+            <button class="btn-action-small" onclick="moveRoutineExercise(${idx}, 1)" ${idx === routineSelectedExercises.length - 1 ? 'disabled' : ''} style="padding: 4px;">▼</button>
+            <button class="btn-action-small danger" onclick="removeRoutineExercise(${idx})" style="padding: 4px; margin-left: 4px;">
+              <svg viewBox="0 0 24 24" style="width: 14px; height: 14px;"><path d="M19,4H15.5L14.5,3H9.5L8.5,4H5V6H19M6,19A2,2 0 0,0 8,21H16A2,2 0 0,0 18,19V7H6V19Z"/></svg>
+            </button>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+    }
+
+    window.moveRoutineExercise = function(index, direction) {
+      const targetIndex = index + direction;
+      if (targetIndex < 0 || targetIndex >= routineSelectedExercises.length) return;
+      
+      const temp = routineSelectedExercises[index];
+      routineSelectedExercises[index] = routineSelectedExercises[targetIndex];
+      routineSelectedExercises[targetIndex] = temp;
+      
+      renderRoutineSelectedExercises();
+    };
+
+    window.removeRoutineExercise = function(index) {
+      routineSelectedExercises.splice(index, 1);
+      renderRoutineSelectedExercises();
+    };
+
+    function openRoutineExerciseSelector() {
+      document.getElementById('routineExSearchInput').value = '';
+      renderRoutineExMuscleChips();
+      renderRoutineExSelectorAccordion("Todos");
+      document.getElementById('routineExerciseSelectorModal').classList.add('open');
+    }
+
+    function renderRoutineExMuscleChips() {
+      const container = document.getElementById('routineExMuscleChips');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const groups = ["Todos", "Pecho", "Espalda", "Hombros", "Bíceps", "Tríceps", "Piernas", "Abdominales"];
+      groups.forEach(group => {
+        const chip = document.createElement('button');
+        chip.className = `chip ${group === "Todos" ? "active-chip" : ""}`;
+        chip.textContent = group;
+        chip.addEventListener('click', () => {
+          container.querySelectorAll('.chip').forEach(c => c.classList.remove('active-chip'));
+          chip.classList.add('active-chip');
+          renderRoutineExSelectorAccordion(group);
+        });
+        container.appendChild(chip);
+      });
+    }
+
+    function renderRoutineExSelectorAccordion(filterMuscleGroup) {
+      const container = document.getElementById('routineExAccordionContainer');
+      if (!container) return;
+      container.innerHTML = '';
+
+      const query = document.getElementById('routineExSearchInput').value.trim().toLowerCase();
+
+      const grouped = {};
+      EXERCISES.forEach(ex => {
+        if (filterMuscleGroup !== "Todos" && ex.group !== filterMuscleGroup) return;
+        if (query.length > 0 && !ex.name.toLowerCase().includes(query)) return;
+
+        if (!grouped[ex.group]) grouped[ex.group] = [];
+        grouped[ex.group].push(ex);
+      });
+
+      Object.keys(grouped).forEach(group => {
+        const section = document.createElement('div');
+        section.className = 'accordion-section active-acc';
+        
+        let listHtml = '';
+        grouped[group].forEach(ex => {
+          listHtml += `
+            <div class="accordion-item" onclick="addExerciseToRoutine('${ex.id}')" style="cursor:pointer; display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-bottom:1px solid var(--border);">
+              <div>
+                <span style="font-weight:600; font-size:0.9rem;">${ex.name}</span>
+                <span style="display:block; font-size:0.72rem; color:var(--text-sec); margin-top:2px;">${ex.equipment}</span>
+              </div>
+              <span style="color:var(--accent); font-weight:bold; font-size:1.2rem;">＋</span>
+            </div>
+          `;
+        });
+
+        section.innerHTML = `
+          <div class="accordion-header">
+            <h3>${group}</h3>
+            <svg class="accordion-header-arrow" viewBox="0 0 24 24"><path d="M7.41,8.58L12,13.17L16.59,8.58L18,10L12,16L6,10L7.41,8.58Z"/></svg>
+          </div>
+          <div class="accordion-body">
+            ${listHtml}
+          </div>
+        `;
+
+        section.querySelector('.accordion-header').addEventListener('click', () => {
+          section.classList.toggle('active-acc');
+        });
+
+        container.appendChild(section);
+      });
+    }
+
+    window.addExerciseToRoutine = function(exId) {
+      routineSelectedExercises.push(exId);
+      renderRoutineSelectedExercises();
+      document.getElementById('routineExerciseSelectorModal').classList.remove('open');
+      showToast("Ejercicio agregado a la rutina");
+    };
+
+    function saveRoutine() {
+      const name = document.getElementById('routineNameInput').value.trim();
+      if (!name) {
+        showToast("Ingresá un nombre para la rutina");
+        return;
+      }
+      if (routineSelectedExercises.length === 0) {
+        showToast("La rutina debe tener al menos 1 ejercicio");
+        return;
+      }
+
+      if (currentEditingRoutineIndex === null) {
+        if (routines.length >= 10) {
+          showToast("Límite de 10 rutinas alcanzado");
+          return;
+        }
+        routines.push({ name, exercises: [...routineSelectedExercises] });
+      } else {
+        routines[currentEditingRoutineIndex] = { name, exercises: [...routineSelectedExercises] };
+      }
+
+      storage.setRoutines(routines);
+      renderRoutines();
+      document.getElementById('routineModal').classList.remove('open');
+      showToast(currentEditingRoutineIndex === null ? "Rutina creada" : "Rutina guardada");
+      
+      syncWithCloud();
+    }
+
+    function openLoadRoutineModal() {
+      const container = document.getElementById('loadRoutineList');
+      if (!container) return;
+      container.innerHTML = '';
+
+      if (routines.length === 0) {
+        container.innerHTML = `
+          <div style="text-align:center; padding:24px; color:var(--text-sec); font-size:0.85rem;">
+            No tenés rutinas creadas. Crealas en la pestaña "Rutinas"
+          </div>
+        `;
+        document.getElementById('loadRoutineModal').classList.add('open');
+        return;
+      }
+
+      routines.forEach((routine, rIdx) => {
+        const item = document.createElement('button');
+        item.className = 'supp-modal-item';
+        item.style.marginBottom = '8px';
+        item.innerHTML = `
+          <div style="flex:1;">
+            <div style="font-weight:700; font-size:0.95rem; color:var(--text);">${routine.name}</div>
+            <div style="font-size:0.75rem; color:var(--text-sec); margin-top:2px;">📋 ${routine.exercises.length} ejercicios</div>
+          </div>
+          <span style="color:var(--accent); font-weight:bold; font-size:1.1rem;">Cargar</span>
+        `;
+        item.addEventListener('click', () => {
+          loadRoutineIntoDay(routine);
+        });
+        container.appendChild(item);
+      });
+
+      document.getElementById('loadRoutineModal').classList.add('open');
+    }
+
+    function loadRoutineIntoDay(routine) {
+      document.getElementById('loadRoutineModal').classList.remove('open');
+      
+      const dateStr = getFormattedDateKey(currentSelectedDate);
+      if (!sessions[dateStr]) {
+        sessions[dateStr] = [];
+      }
+
+      const startIndex = sessions[dateStr].length;
+
+      routine.exercises.forEach(exId => {
+        sessions[dateStr].push({
+          exerciseId: exId,
+          sets: [{ weight: 0, reps: 0 }]
+        });
+      });
+
+      storage.setSessions(sessions);
+      
+      renderCalendar();
+      openDayDetailPanel();
+
+      showToast(`Rutina "${routine.name}" cargada`);
+
+      syncWithCloud();
+
+      showCustomConfirm(
+        "Cargar pesos/reps",
+        "¿Querés registrar los pesos y repeticiones ahora? (Si seleccionás Cancelar, la rutina quedará cargada y podrás editarlos uno por uno a medida que vas entrenando)",
+        () => {
+          const firstExInfo = EXERCISES.find(e => e.id === routine.exercises[0]);
+          if (firstExInfo) {
+            isEditingExerciseIndex = startIndex;
+            openAddExerciseStep2(firstExInfo, [{ weight: 0, reps: 0 }]);
+          }
+        }
+      );
     }
   
