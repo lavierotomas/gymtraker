@@ -1284,6 +1284,13 @@
           document.getElementById('loadRoutineModal').classList.remove('open');
         });
       }
+
+      // 1RM Estimated select change listener and tooltip initialization
+      const oneRmExerciseSelect = document.getElementById('oneRmExerciseSelect');
+      if (oneRmExerciseSelect) {
+        oneRmExerciseSelect.addEventListener('change', updateOneRmDashboard);
+      }
+      initOneRmTooltip();
     }
 
     /***************************************************************************
@@ -2234,6 +2241,7 @@
       drawWeightHistoryChart();
       drawVolumeBarChart();
       drawMuscleDonutChart();
+      updateOneRmDashboard();
     }
 
     function handleChartsResize() {
@@ -2599,6 +2607,385 @@
       ctx.beginPath();
       ctx.arc(w / 2, h / 2, 42, 0, Math.PI * 2);
       ctx.fill();
+    }
+
+    /***************************************************************************
+     * 10.5 1RM ESTIMATED DASHBOARD (Epley Formula)
+     **************************************************************************/
+    function calc1RM(weight, reps) {
+      if (reps === 1) return weight;
+      return weight * (1 + reps / 30);
+    }
+
+    function updateOneRmDashboard() {
+      const select = document.getElementById('oneRmExerciseSelect');
+      const content = document.getElementById('oneRmContent');
+      const emptyState = document.getElementById('oneRmEmptyState');
+      if (!select || !content || !emptyState) return;
+
+      // Find all exercise IDs with history (excluding bodyweight exercises)
+      const exerciseIdsWithHistory = [];
+      Object.keys(sessions).forEach(dateStr => {
+        const daySession = sessions[dateStr] || [];
+        daySession.forEach(entry => {
+          const exInfo = EXERCISES.find(e => e.id === entry.exerciseId);
+          if (exInfo && exInfo.equipment !== "Peso corporal" && entry.sets && entry.sets.length > 0) {
+            if (!exerciseIdsWithHistory.includes(entry.exerciseId)) {
+              exerciseIdsWithHistory.push(entry.exerciseId);
+            }
+          }
+        });
+      });
+
+      if (exerciseIdsWithHistory.length === 0) {
+        content.style.display = 'none';
+        emptyState.style.display = 'flex';
+        return;
+      }
+
+      content.style.display = 'block';
+      emptyState.style.display = 'none';
+
+      // Sort exercise options by frequency (most sessions first)
+      const frequency = {};
+      exerciseIdsWithHistory.forEach(id => {
+        frequency[id] = 0;
+        Object.keys(sessions).forEach(dateStr => {
+          const daySession = sessions[dateStr] || [];
+          if (daySession.some(e => e.exerciseId === id)) {
+            frequency[id]++;
+          }
+        });
+      });
+
+      exerciseIdsWithHistory.sort((a, b) => frequency[b] - frequency[a]);
+
+      // Populate select options if they are different
+      const currentOptions = Array.from(select.options).map(o => o.value);
+      const optionsChanged = exerciseIdsWithHistory.length !== currentOptions.length ||
+        !exerciseIdsWithHistory.every((id, idx) => id === currentOptions[idx]);
+
+      if (optionsChanged) {
+        select.innerHTML = '';
+        exerciseIdsWithHistory.forEach(id => {
+          const exInfo = EXERCISES.find(e => e.id === id);
+          if (exInfo) {
+            const option = document.createElement('option');
+            option.value = id;
+            option.textContent = exInfo.name;
+            select.appendChild(option);
+          }
+        });
+        
+        // Select the first one by default (the most frequent)
+        if (exerciseIdsWithHistory.length > 0) {
+          select.value = exerciseIdsWithHistory[0];
+        }
+      }
+
+      const selectedExerciseId = select.value;
+      if (!selectedExerciseId) return;
+
+      // Build history for the selected exercise
+      const history = [];
+      Object.keys(sessions).forEach(dateStr => {
+        const daySession = sessions[dateStr] || [];
+        const entries = daySession.filter(entry => entry.exerciseId === selectedExerciseId);
+        if (entries.length > 0) {
+          let maxRmForDay = 0;
+          entries.forEach(entry => {
+            if (entry.sets) {
+              entry.sets.forEach(set => {
+                const weight = Number(set.weight) || 0;
+                const reps = Number(set.reps) || 0;
+                let rm = 0;
+                if (reps === 1) {
+                  rm = weight;
+                } else if (reps > 1) {
+                  rm = weight * (1 + reps / 30);
+                }
+                if (rm > maxRmForDay) {
+                  maxRmForDay = rm;
+                }
+              });
+            }
+          });
+          if (maxRmForDay > 0) {
+            history.push({ date: dateStr, rm: maxRmForDay });
+          }
+        }
+      });
+
+      history.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      if (history.length === 0) {
+        content.style.display = 'none';
+        emptyState.style.display = 'flex';
+        return;
+      }
+
+      // 1. Calculate Metrics
+      const currentRm = history[history.length - 1].rm;
+      const bestRm = Math.max(...history.map(h => h.rm));
+      const firstRm = history[0].rm;
+      const diff = currentRm - firstRm;
+
+      document.getElementById('oneRmCurrent').textContent = `${currentRm.toFixed(1)} kg`;
+      document.getElementById('oneRmBest').textContent = `${bestRm.toFixed(1)} kg`;
+
+      const progressEl = document.getElementById('oneRmProgress');
+      if (diff > 0) {
+        progressEl.textContent = `+${diff.toFixed(1)} kg`;
+        progressEl.style.color = 'var(--success)';
+        progressEl.style.fontWeight = '700';
+      } else if (diff < 0) {
+        progressEl.textContent = `${diff.toFixed(1)} kg`;
+        progressEl.style.color = 'var(--danger)';
+        progressEl.style.fontWeight = '700';
+      } else {
+        progressEl.textContent = `0.0 kg`;
+        progressEl.style.color = 'var(--text-sec)';
+        progressEl.style.fontWeight = 'normal';
+      }
+
+      // 2. Draw Chart
+      drawOneRmChart(history);
+
+      // 3. Render training zones
+      const zonesBody = document.getElementById('oneRmZonesBody');
+      const zones = [
+        { name: "Fuerza máxima", pctMin: 90, pctMax: 95, reps: "1–3" },
+        { name: "Fuerza / potencia", pctMin: 80, pctMax: 85, reps: "3–5" },
+        { name: "Hipertrofia", pctMin: 70, pctMax: 80, reps: "6–12" },
+        { name: "Resistencia", pctMin: 60, pctMax: 70, reps: "12–20" }
+      ];
+
+      function formatZoneWeight(val) {
+        const rounded = Math.round(val * 2) / 2;
+        return rounded % 1 === 0 ? rounded.toString() : rounded.toFixed(1);
+      }
+
+      let tableRows = '';
+      zones.forEach(zone => {
+        const weightMin = formatZoneWeight(currentRm * (zone.pctMin / 100));
+        const weightMax = formatZoneWeight(currentRm * (zone.pctMax / 100));
+        
+        tableRows += `
+          <tr style="border-bottom: 1px solid var(--border);">
+            <td style="padding: 12px 10px; color: var(--text); font-weight: 500;">${zone.name}</td>
+            <td style="padding: 12px 10px; color: var(--text-sec); font-family: var(--font-mono);">${zone.pctMin}–${zone.pctMax}%</td>
+            <td style="padding: 12px 10px; color: var(--accent); font-weight: 700; font-family: var(--font-mono);">${weightMin}–${weightMax} kg</td>
+            <td style="padding: 12px 10px; color: var(--text-sec); font-family: var(--font-mono);">${zone.reps}</td>
+          </tr>
+        `;
+      });
+      zonesBody.innerHTML = tableRows;
+    }
+
+    function drawOneRmChart(history) {
+      const canvas = document.getElementById('oneRmChartCanvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      
+      if (rect.width === 0) return;
+      
+      canvas.width = rect.width * dpr;
+      canvas.height = 180 * dpr;
+      ctx.scale(dpr, dpr);
+
+      const w = rect.width;
+      const h = 180;
+
+      ctx.clearRect(0, 0, w, h);
+
+      const isLight = document.body.classList.contains('light-theme');
+      const textColor = isLight ? '#4a5a78' : '#7a8ba8';
+      const gridColor = isLight ? 'rgba(0, 82, 204, 0.1)' : 'rgba(30, 42, 58, 0.5)';
+      const accentColor = isLight ? '#0052cc' : '#0066ff';
+      const successColor = isLight ? '#00a854' : '#00e676';
+      const gradientStart = isLight ? 'rgba(0, 82, 204, 0.12)' : 'rgba(0, 102, 255, 0.15)';
+
+      const paddingLeft = 45;
+      const paddingRight = 16;
+      const paddingTop = 20;
+      const paddingBottom = 35;
+
+      const chartW = w - paddingLeft - paddingRight;
+      const chartH = h - paddingTop - paddingBottom;
+
+      const rms = history.map(h => h.rm);
+      const minRm = Math.min(...rms);
+      const maxRm = Math.max(...rms);
+      
+      const diff = maxRm - minRm;
+      let minWVal = minRm - (diff * 0.1);
+      let maxWVal = maxRm + (diff * 0.1);
+      
+      if (minWVal === maxWVal || diff === 0) {
+        minWVal = minRm - 5;
+        maxWVal = maxRm + 5;
+      }
+      if (minWVal < 0) minWVal = 0;
+      
+      const weightRange = maxWVal - minWVal;
+
+      const gridSteps = 4;
+      ctx.strokeStyle = gridColor;
+      ctx.lineWidth = 1;
+      ctx.font = '10px var(--font-mono)';
+      ctx.fillStyle = textColor;
+      ctx.textAlign = 'right';
+
+      for (let i = 0; i <= gridSteps; i++) {
+        const yVal = minWVal + (weightRange * (i / gridSteps));
+        const y = h - paddingBottom - (chartH * (i / gridSteps));
+        
+        ctx.beginPath();
+        ctx.moveTo(paddingLeft, y);
+        ctx.lineTo(w - paddingRight, y);
+        ctx.stroke();
+
+        ctx.fillText(Math.round(yVal) + ' kg', paddingLeft - 8, y + 4);
+      }
+
+      const points = history.map((log, idx) => {
+        const x = history.length === 1 
+          ? paddingLeft + chartW / 2 
+          : paddingLeft + (chartW * (idx / (history.length - 1)));
+        const y = h - paddingBottom - (((log.rm - minWVal) / weightRange) * chartH);
+        return { x, y, date: log.date, rm: log.rm };
+      });
+
+      if (points.length > 1) {
+        const areaGrad = ctx.createLinearGradient(0, paddingTop, 0, h - paddingBottom);
+        areaGrad.addColorStop(0, gradientStart);
+        areaGrad.addColorStop(1, 'transparent');
+
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, h - paddingBottom);
+        points.forEach(pt => ctx.lineTo(pt.x, pt.y));
+        ctx.lineTo(points[points.length - 1].x, h - paddingBottom);
+        ctx.closePath();
+        ctx.fillStyle = areaGrad;
+        ctx.fill();
+      }
+
+      if (points.length > 1) {
+        ctx.beginPath();
+        ctx.moveTo(points[0].x, points[0].y);
+        for (let i = 1; i < points.length; i++) {
+          ctx.lineTo(points[i].x, points[i].y);
+        }
+        ctx.strokeStyle = accentColor;
+        ctx.lineWidth = 2.5;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+        ctx.stroke();
+      }
+
+      const bestRm = maxRm;
+      canvas.chartPoints = points;
+
+      points.forEach(pt => {
+        const isBest = Math.abs(pt.rm - bestRm) < 0.0001;
+        ctx.beginPath();
+        if (isBest) {
+          ctx.arc(pt.x, pt.y, 8, 0, 2 * Math.PI);
+          ctx.fillStyle = successColor;
+        } else {
+          ctx.arc(pt.x, pt.y, 5, 0, 2 * Math.PI);
+          ctx.fillStyle = accentColor;
+        }
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(pt.x, pt.y, isBest ? 4 : 2.5, 0, 2 * Math.PI);
+        ctx.fillStyle = '#ffffff';
+        ctx.fill();
+      });
+
+      ctx.textAlign = 'center';
+      ctx.font = '9px var(--font-mono)';
+      ctx.fillStyle = textColor;
+
+      const rotateLabels = history.length > 10;
+
+      points.forEach(pt => {
+        const d = new Date(pt.date + 'T00:00:00');
+        const day = d.getDate().toString().padStart(2, '0');
+        const month = (d.getMonth() + 1).toString().padStart(2, '0');
+        const label = `${day}/${month}`;
+        
+        ctx.save();
+        ctx.translate(pt.x, h - paddingBottom + 14);
+        if (rotateLabels) {
+          ctx.rotate(45 * Math.PI / 180);
+        }
+        ctx.fillText(label, 0, 0);
+        ctx.restore();
+      });
+    }
+
+    function initOneRmTooltip() {
+      const canvas = document.getElementById('oneRmChartCanvas');
+      const tooltip = document.getElementById('oneRmTooltip');
+      if (!canvas || !tooltip) return;
+
+      const handleMove = (e) => {
+        if (!canvas.chartPoints || canvas.chartPoints.length === 0) return;
+        
+        const rect = canvas.getBoundingClientRect();
+        let clientX, clientY;
+        if (e.touches && e.touches.length > 0) {
+          clientX = e.touches[0].clientX;
+          clientY = e.touches[0].clientY;
+        } else {
+          clientX = e.clientX;
+          clientY = e.clientY;
+        }
+
+        const x = clientX - rect.left;
+        const y = clientY - rect.top;
+
+        let closestPt = null;
+        let minDist = 25;
+        
+        canvas.chartPoints.forEach(pt => {
+          const dx = pt.x - x;
+          const dy = pt.y - y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          if (dist < minDist) {
+            minDist = dist;
+            closestPt = pt;
+          }
+        });
+
+        if (closestPt) {
+          const d = new Date(closestPt.date + 'T00:00:00');
+          const day = d.getDate().toString().padStart(2, '0');
+          const month = (d.getMonth() + 1).toString().padStart(2, '0');
+          const formattedDate = `${day}/${month}`;
+          
+          tooltip.innerHTML = `${formattedDate} — <strong>${closestPt.rm.toFixed(1)} kg</strong>`;
+          tooltip.style.display = 'block';
+          tooltip.style.left = (x + 10) + 'px';
+          tooltip.style.top = (y - 30) + 'px';
+        } else {
+          tooltip.style.display = 'none';
+        }
+      };
+
+      const handleLeave = () => {
+        tooltip.style.display = 'none';
+      };
+
+      canvas.addEventListener('mousemove', handleMove);
+      canvas.addEventListener('touchmove', handleMove, { passive: true });
+      canvas.addEventListener('mouseleave', handleLeave);
+      canvas.addEventListener('touchend', handleLeave);
     }
 
     /***************************************************************************

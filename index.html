@@ -530,6 +530,83 @@
           </div>
         </div>
 
+        <!-- 1RM Estimation Card -->
+        <div class="progress-card" id="oneRmSection">
+          <h3 class="progress-card-title">Progreso de Fuerza (1RM Estimado)</h3>
+          
+          <div id="oneRmContent">
+            <!-- Sección 1 — Explicación del sistema (card informativa) -->
+            <div class="card info-card-1rm" style="background: var(--surface-el); border-left: 3px solid var(--accent); padding: 16px; margin-bottom: 20px; border-radius: var(--radius-card);">
+              <h4 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 8px; color: var(--text);">¿Qué es el 1RM estimado?</h4>
+              <p style="font-size: 0.85rem; color: var(--text-sec); line-height: 1.5; margin: 0;">
+                Tu <strong>1RM</strong> es el peso máximo que podrías levantar una sola vez en un ejercicio. Intentar medirlo en el gimnasio es arriesgado, así que lo estimamos automáticamente a partir de lo que ya registraste.<br><br>
+                Cada vez que cargás una serie, calculamos tu <strong>1RM</strong> con la fórmula de Epley — la más utilizada en el mundo del fitness. Por ejemplo: si hiciste <strong>80 kg × 8 repeticiones</strong>, tu <strong>1RM</strong> estimado es de <strong>~101 kg</strong>.<br><br>
+                Esto te permite ver tu progreso de fuerza real en el tiempo, más allá del peso que uses cada día.
+              </p>
+            </div>
+
+            <!-- Sección 2 — Selector de ejercicio -->
+            <div class="form-group" style="margin-bottom: 20px;">
+              <label for="oneRmExerciseSelect" style="font-size: 0.85rem; color: var(--text-sec); font-weight: 600; margin-bottom: 8px;">Seleccioná un ejercicio para ver su evolución</label>
+              <select id="oneRmExerciseSelect" class="input-field" style="width: 100%;">
+                <!-- Loaded dynamically -->
+              </select>
+            </div>
+
+            <!-- Sección 3 — Métricas destacadas (3 chips) -->
+            <div class="metrics-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 20px;">
+              <div class="metric-item">
+                <div id="oneRmCurrent" class="metric-value">--</div>
+                <div class="metric-label">1RM actual</div>
+              </div>
+              <div class="metric-item">
+                <div id="oneRmBest" class="metric-value">--</div>
+                <div class="metric-label">Mejor 1RM</div>
+              </div>
+              <div class="metric-item">
+                <div id="oneRmProgress" class="metric-value">--</div>
+                <div class="metric-label">Progreso total</div>
+              </div>
+            </div>
+
+            <!-- Sección 4 — Gráfico de evolución -->
+            <div style="margin-bottom: 24px; position: relative; width: 100%;">
+              <canvas id="oneRmChartCanvas" style="width: 100%; height: 180px; display: block;"></canvas>
+              <!-- Tooltip element -->
+              <div id="oneRmTooltip" style="position: absolute; display: none; background: rgba(15, 17, 23, 0.95); border: 1px solid var(--border); color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem; pointer-events: none; z-index: 10; font-family: var(--font-mono); box-shadow: 0 4px 10px rgba(0,0,0,0.3); white-space: nowrap;"></div>
+            </div>
+
+            <!-- Sección 5 — Tabla de zonas de entrenamiento -->
+            <div class="zones-table-section" style="margin-top: 16px;">
+              <h4 style="font-family: var(--font-display); font-size: 1.05rem; margin-bottom: 12px; color: var(--text);">Con tu 1RM actual, trabajá así:</h4>
+              <div style="overflow-x: auto; background: var(--surface-el); border-radius: var(--radius-card); padding: 8px;">
+                <table style="width: 100%; border-collapse: collapse; text-align: left; font-size: 0.85rem;">
+                  <thead>
+                    <tr style="border-bottom: 1px solid var(--border);">
+                      <th style="padding: 10px; color: var(--text-sec); font-weight: 600;">Objetivo</th>
+                      <th style="padding: 10px; color: var(--text-sec); font-weight: 600;">% del 1RM</th>
+                      <th style="padding: 10px; color: var(--text-sec); font-weight: 600;">Peso sugerido</th>
+                      <th style="padding: 10px; color: var(--text-sec); font-weight: 600;">Reps sugeridas</th>
+                    </tr>
+                  </thead>
+                  <tbody id="oneRmZonesBody">
+                    <!-- Updated dynamically -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+
+          <!-- Estado vacío -->
+          <div id="oneRmEmptyState" style="display: none; flex-direction: column; align-items: center; justify-content: center; padding: 40px 20px; text-align: center;">
+            <svg viewBox="0 0 24 24" style="width: 48px; height: 48px; fill: var(--accent); margin-bottom: 16px;">
+              <path d="M5,9H3A1,1,0,0,0,2,10v4a1,1,0,0,0,1,1H5a1,1,0,0,0,1-1V10A1,1,0,0,0,5,9Zm16,0H19a1,1,0,0,0,-1,1v4a1,1,0,0,0,1,1h2a1,1,0,0,0,1,-1V10A1,1,0,0,0,21,9ZM17,11H7v2H17ZM6,8V16a1,1,0,0,0,1,1H8V7H7A1,1,0,0,0,6,8Zm11,-1H16V17h1a1,1,0,0,0,1,-1V8A1,1,0,0,0,17,7Z"/>
+            </svg>
+            <h4 style="font-family: var(--font-display); font-size: 1.1rem; margin-bottom: 6px; color: var(--text);">Registrá sesiones para ver tu evolución de fuerza</h4>
+            <p style="font-size: 0.82rem; color: var(--text-sec); margin: 0;">El 1RM se calcula automáticamente cada vez que cargás una serie</p>
+          </div>
+        </div>
+
       </div>
     </section>
 
