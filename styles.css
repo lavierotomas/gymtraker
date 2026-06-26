@@ -636,12 +636,13 @@ main.content-area {
   border-top-right-radius: 20px;
   max-height: 80vh;
   min-height: 250px;
-  z-index: 110;
+  z-index: 130;
   display: flex;
   flex-direction: column;
   transform: translateY(105%);
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
   box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.5);
+  overscroll-behavior: contain;
 }
 
 .day-detail-panel.open {
@@ -653,7 +654,7 @@ main.content-area {
   top: 0; left: 0; right: 0; bottom: 0;
   background: rgba(0,0,0,0.6);
   backdrop-filter: blur(4px);
-  z-index: 105;
+  z-index: 125;
   display: none;
 }
 
@@ -681,6 +682,25 @@ main.content-area {
   flex-direction: column;
   gap: 12px;
   padding-bottom: 80px; /* Spacer for bottom float buttons */
+  overscroll-behavior: contain;
+}
+
+/* Close button styling for mobile detail panel drawer */
+#closePanelBtn {
+  background: transparent !important;
+  border: none !important;
+  color: var(--text-sec);
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color var(--transition), background-color var(--transition);
+}
+#closePanelBtn:hover, #closePanelBtn:active {
+  color: var(--text);
+  background: var(--surface-el) !important;
 }
 
 .day-sessions-list {
@@ -1485,7 +1505,7 @@ main.content-area {
 /* Toast Notification */
 .toast-container {
   position: fixed;
-  top: -60px;
+  top: -150px;
   left: 50%;
   transform: translateX(-50%);
   background: linear-gradient(135deg, var(--accent), var(--accent-sec));
@@ -1503,7 +1523,7 @@ main.content-area {
 }
 
 .toast-container.show {
-  top: 20px;
+  top: calc(20px + env(safe-area-inset-top));
 }
 
 /* Sync Indicator Styles */

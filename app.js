@@ -1139,8 +1139,24 @@
       });
 
       // Close Day Detail drawer
-      document.getElementById('closePanelBtn').addEventListener('click', closeDayDetailPanel);
-      document.getElementById('panelOverlay').addEventListener('click', closeDayDetailPanel);
+      const closePanelBtn = document.getElementById('closePanelBtn');
+      const panelOverlay = document.getElementById('panelOverlay');
+      
+      const handleClosePanel = (e) => {
+        if (e) {
+          if (e.cancelable) e.preventDefault();
+        }
+        closeDayDetailPanel();
+      };
+      
+      if (closePanelBtn) {
+        closePanelBtn.addEventListener('click', handleClosePanel);
+        closePanelBtn.addEventListener('touchstart', handleClosePanel, { passive: false });
+      }
+      if (panelOverlay) {
+        panelOverlay.addEventListener('click', handleClosePanel);
+        panelOverlay.addEventListener('touchstart', handleClosePanel, { passive: false });
+      }
 
       // Permanent Add Exercise Button in Day Panel
       var addExerciseBtn = document.getElementById('addExerciseBtn');
@@ -1476,11 +1492,13 @@
       const overlay = document.getElementById('panelOverlay');
       panel.classList.add('open');
       overlay.classList.add('open');
+      document.body.style.overflow = 'hidden';
     }
 
     function closeDayDetailPanel() {
       document.getElementById('dayDetailPanel').classList.remove('open');
       document.getElementById('panelOverlay').classList.remove('open');
+      document.body.style.overflow = '';
     }
 
     function renderDayDetailPanel() {
