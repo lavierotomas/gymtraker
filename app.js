@@ -179,81 +179,89 @@
       return ANIMATION_TEMPLATES[type] || ANIMATION_TEMPLATES.chest_press_db;
     }
 
+    function getExerciseMediaHTML(exercise) {
+      if (exercise.videoPath) {
+        return `<div class="cropped-video-container">
+                  <video autoplay loop muted playsinline>
+                    <source src="${exercise.videoPath}" type="video/mp4">
+                    Tu navegador no soporta video.
+                  </video>
+                </div>`;
+      } else if (exercise.gifPath) {
+        return `<img src="${exercise.gifPath}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 8px; cursor: pointer;" alt="${exercise.name}">`;
+      } else {
+        return `<div style="cursor: pointer; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center;">
+                  ${getAnimationSVG(exercise.animationType)}
+                </div>`;
+      }
+    }
+
     // Complete Exercise Database
     const EXERCISES = [
       // Pecho
-      { id: "press_plano_mancuernas", name: "Press plano con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "Acostado boca arriba, empuja las mancuernas verticalmente desde el pecho extendiendo los codos. Mantené el control en el descenso.", animationType: "chest_press_db" },
-      { id: "press_plano_barra", name: "Press plano con barra", group: "Pecho", equipment: "Barra", description: "El clásico de pecho. Acostado en banco plano, baja la barra de manera controlada hasta tocar el esternón y empuja hacia arriba.", animationType: "chest_press_db" },
-      { id: "press_inclinado_mancuernas", name: "Press inclinado con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "En un banco a 30-45 grados, empuja las mancuernas hacia arriba enfocando el esfuerzo en el pectoral superior.", animationType: "chest_press_db" },
-      { id: "press_inclinado_barra", name: "Press inclinado con barra", group: "Pecho", equipment: "Barra", description: "Sentado en banco inclinado, baja la barra hasta la parte superior del pecho y empuja con potencia.", animationType: "chest_press_db" },
-      { id: "press_inclinado_smith", name: "Press inclinado con Smith", group: "Pecho", equipment: "Máquina Multipower", description: "Press inclinado en máquina Smith para mayor estabilidad, aislando el trabajo en el pectoral superior.", animationType: "chest_press_db" },
-      { id: "peck_deck", name: "Peck deck (contractora)", group: "Pecho", equipment: "Máquina", description: "Sentado, junta los brazos al frente de forma circular manteniendo los codos fijos para una máxima contracción del pectoral.", animationType: "lateral_raise" },
-      { id: "flexiones_pecho", name: "Flexiones de pecho", group: "Pecho", equipment: "Peso corporal", description: "Ejercita pecho y tríceps con el peso de tu propio cuerpo en posición horizontal.", animationType: "chest_press_db" },
-      { id: "pecho_alto_polea", name: "Pecho alto en polea", group: "Pecho", equipment: "Polea", description: "Realiza cruces con las poleas posicionadas abajo, llevando las manos hacia arriba y al centro para enfocar la parte superior.", animationType: "lateral_raise" },
-      { id: "pecho_bajo_polea", name: "Pecho bajo en polea", group: "Pecho", equipment: "Polea", description: "Realiza cruces con las poleas altas, empujando hacia abajo y adelante para enfocar la porción inferior del pectoral.", animationType: "lateral_raise" },
-      { id: "aperturas_mancuernas", name: "Aperturas con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "Apertura en banco plano con ligera flexión de codos, sintiendo el estiramiento profundo del pectoral.", animationType: "lateral_raise" },
-      { id: "pullover_mancuerna", name: "Pullover con mancuerna", group: "Pecho", equipment: "Mancuerna", description: "Acostado transversal sobre un banco, baja la mancuerna por detrás de la cabeza manteniendo los brazos semifijos.", animationType: "row" },
-
+      { id: "press_plano_mancuernas", name: "Press plano con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "Acostado boca arriba, empuja las mancuernas verticalmente desde el pecho extendiendo los codos. Mantené el control en el descenso.", animationType: "chest_press_db", videoPath: "videos/press_plano_con_mancuernas.mp4" },
+{ id: "press_plano_barra", name: "Press plano con barra", group: "Pecho", equipment: "Barra", description: "El clásico de pecho. Acostado en banco plano, baja la barra de manera controlada hasta tocar el esternón y empuja hacia arriba.", animationType: "chest_press_db", videoPath: "videos/press_plano_barra.mp4" },
+{ id: "press_inclinado_mancuernas", name: "Press inclinado con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "En un banco a 30-45 grados, empuja las mancuernas hacia arriba enfocando el esfuerzo en el pectoral superior.", animationType: "chest_press_db", videoPath: "videos/press_inclinado_mancuernas.mp4" },
+{ id: "press_inclinado_barra", name: "Press inclinado con barra", group: "Pecho", equipment: "Barra", description: "Sentado en banco inclinado, baja la barra hasta la parte superior del pecho y empuja con potencia.", animationType: "chest_press_db", videoPath: "videos/press_inclinado_barra.mp4" },
+      { id: "press_inclinado_smith", name: "Press inclinado con Smith", group: "Pecho", equipment: "Máquina Multipower", description: "Press inclinado en máquina Smith para mayor estabilidad, aislando el trabajo en el pectoral superior.", animationType: "chest_press_db", videoPath: "videos/press_inclinado_smith.mp4" },
+{ id: "peck_deck", name: "Peck deck (contractora)", group: "Pecho", equipment: "Máquina", description: "Sentado, junta los brazos al frente de forma circular manteniendo los codos fijos para una máxima contracción del pectoral.", animationType: "lateral_raise", videoPath: "videos/peck_deck.mp4" },
+{ id: "flexiones_pecho", name: "Flexiones de pecho", group: "Pecho", equipment: "Peso corporal", description: "Ejercita pecho y tríceps con el peso de tu propio cuerpo en posición horizontal.", animationType: "chest_press_db", videoPath: "videos/flexiones_pecho.mp4" },
+{ id: "pecho_alto_polea", name: "Pecho alto en polea", group: "Pecho", equipment: "Polea", description: "Realiza cruces con las poleas posicionadas abajo, llevando las manos hacia arriba y al centro para enfocar la parte superior.", animationType: "lateral_raise", videoPath: "videos/pecho_alto_polea.mp4" },
+      { id: "pecho_bajo_polea", name: "Pecho bajo en polea", group: "Pecho", equipment: "Polea", description: "Realiza cruces con las poleas altas, empujando hacia abajo y adelante para enfocar la porción inferior del pectoral.", animationType: "lateral_raise", videoPath: "videos/pecho_bajo_polea.mp4"  },
+{ id: "aperturas_mancuernas", name: "Aperturas con mancuernas", group: "Pecho", equipment: "Mancuernas", description: "Apertura en banco plano con ligera flexión de codos, sintiendo el estiramiento profundo del pectoral.", animationType: "lateral_raise", videoPath: "videos/aperturas_mancuernas.mp4" },
       // Espalda
-      { id: "dominadas", name: "Dominadas", group: "Espalda", equipment: "Peso corporal", description: "Colgate de la barra y tira con tu espalda para subir tu barbilla por encima de ella. Mantén el descenso controlado.", animationType: "pullup" },
-      { id: "dominadas_peso", name: "Dominadas con peso", group: "Espalda", equipment: "Lastre", description: "Dominadas tradicionales agregando un cinturón de lastre para progresión de fuerza extrema.", animationType: "pullup" },
-      { id: "jalon_pecho_ancho", name: "Jalón al pecho (agarre ancho)", group: "Espalda", equipment: "Polea", description: "En polea alta, tira de la barra hacia la parte superior del pecho contrayendo los dorsales.", animationType: "pullup" },
-      { id: "jalon_pecho_cerrado", name: "Jalón al pecho cerrado (supino)", group: "Espalda", equipment: "Polea", description: "Agarre cerrado invertido (supino), tirando de la barra al pecho enfocando el dorsal inferior y el bíceps.", animationType: "pullup" },
-      { id: "remo_t", name: "Remo T (T-bar row)", group: "Espalda", equipment: "Barra T", description: "Con el torso inclinado a 45 grados, tira del peso hacia tu pecho pegando los codos a las costillas.", animationType: "row" },
-      { id: "remo_sentado_polea", name: "Remo sentado en polea", group: "Espalda", equipment: "Polea", description: "Tira del cable hacia el abdomen manteniendo la espalda recta y retrayendo las escápulas al final.", animationType: "row" },
-      { id: "remo_barra", name: "Remo con barra", group: "Espalda", equipment: "Barra", description: "Inclinado hacia adelante, tira de la barra hacia la zona del ombligo con codos a 45 grados.", animationType: "row" },
-      { id: "peso_muerto", name: "Peso muerto", group: "Espalda", equipment: "Barra", description: "El rey de los ejercicios. Levanta la barra del suelo empujando con las piernas y enderezando la cadera y espalda.", animationType: "deadlift" },
-      { id: "pullover_polea", name: "Pullover en polea", group: "Espalda", equipment: "Polea", description: "Con brazos rectos, empuja el cable hacia abajo enfocando la contracción únicamente en los dorsales.", animationType: "row" },
-      { id: "remo_mancuerna", name: "Remo con mancuerna", group: "Espalda", equipment: "Mancuernas", description: "Apoyado en un banco, tira de la mancuerna hacia la cadera alternando los brazos.", animationType: "row" },
-      { id: "hiperextensiones", name: "Hiperextensiones", group: "Espalda", equipment: "Banco romano", description: "Realiza una extensión del torso estabilizando con lumbares e isquiotibiales.", animationType: "deadlift" },
+{ id: "dominadas", name: "Dominadas", group: "Espalda", equipment: "Peso corporal", description: "Colgate de la barra y tira con tu espalda para subir tu barbilla por encima de ella. Mantén el descenso controlado.", animationType: "pullup", videoPath: "videos/dominadas.mp4" },
+{ id: "dominadas_peso", name: "Dominadas con peso", group: "Espalda", equipment: "Lastre", description: "Dominadas tradicionales agregando un cinturón de lastre para progresión de fuerza extrema.", animationType: "pullup", videoPath: "videos/dominadas_peso.mp4" },
+{ id: "jalon_pecho_ancho", name: "Jalón al pecho (agarre ancho)", group: "Espalda", equipment: "Polea", description: "En polea alta, tira de la barra hacia la parte superior del pecho contrayendo los dorsales.", animationType: "pullup", videoPath: "videos/jalon_pecho_ancho.mp4" },
+{ id: "jalon_pecho_cerrado", name: "Jalón al pecho cerrado (supino)", group: "Espalda", equipment: "Polea", description: "Agarre cerrado invertido (supino), tirando de la barra al pecho enfocando el dorsal inferior y el bíceps.", animationType: "pullup", videoPath: "videos/jalon_pecho_cerrado.mp4" },
+{ id: "remo_t", name: "Remo T (T-bar row)", group: "Espalda", equipment: "Barra T", description: "Con el torso inclinado a 45 grados, tira del peso hacia tu pecho pegando los codos a las costillas.", animationType: "row", videoPath: "videos/remo_t.mp4" },
+{ id: "remo_sentado_polea", name: "Remo sentado en polea", group: "Espalda", equipment: "Polea", description: "Tira del cable hacia el abdomen manteniendo la espalda recta y retrayendo las escápulas al final.", animationType: "row", videoPath: "videos/remo_sentado_polea.mp4" },
+{ id: "remo_barra", name: "Remo con barra", group: "Espalda", equipment: "Barra", description: "Inclinado hacia adelante, tira de la barra hacia la zona del ombligo con codos a 45 grados.", animationType: "row", videoPath: "videos/remo_barra.mp4" },
+{ id: "peso_muerto", name: "Peso muerto", group: "Espalda", equipment: "Barra", description: "El rey de los ejercicios. Levanta la barra del suelo empujando con las piernas y enderezando la cadera y espalda.", animationType: "deadlift", videoPath: "videos/peso_muerto.mp4" },
+      { id: "pullover_polea", name: "Pullover en polea", group: "Espalda", equipment: "Polea", description: "Con brazos rectos, empuja el cable hacia abajo enfocando la contracción únicamente en los dorsales.", animationType: "row", videoPath: "videos/pullover_polea.mp4" },
+{ id: "remo_mancuerna", name: "Remo con mancuerna", group: "Espalda", equipment: "Mancuernas", description: "Apoyado en un banco, tira de la mancuerna hacia la cadera alternando los brazos.", animationType: "row", videoPath: "videos/remo_mancuerna.mp4" },
 
       // Hombros
-      { id: "vuelos_laterales_mancuernas", name: "Vuelos laterales con mancuernas", group: "Hombros", equipment: "Mancuernas", description: "Eleva las mancuernas lateralmente hasta la altura de los hombros con una leve flexión de codo.", animationType: "lateral_raise" },
-      { id: "vuelos_laterales_polea", name: "Vuelos laterales en polea", group: "Hombros", equipment: "Polea", description: "Eleva el cable de costado asegurando tensión constante en el deltoides lateral.", animationType: "lateral_raise" },
-      { id: "press_militar_mancuernas", name: "Press militar con mancuernas", group: "Hombros", equipment: "Mancuernas", description: "Sentado o parado, empuja las mancuernas por encima de tu cabeza verticalmente.", animationType: "shoulder_press" },
-      { id: "press_militar_barra", name: "Press militar con barra", group: "Hombros", equipment: "Barra", description: "Parado, empuja la barra verticalmente desde las clavículas por encima de la cabeza.", animationType: "shoulder_press" },
-      { id: "posteriores_peck_deck", name: "Posteriores en peck deck", group: "Hombros", equipment: "Máquina", description: "Sentado al revés, empuja los brazos hacia atrás para trabajar la porción posterior del hombro.", animationType: "lateral_raise" },
-      { id: "posteriores_polea", name: "Posteriores en polea", group: "Hombros", equipment: "Polea", description: "Cruces de poleas altas para deltoides posterior cruzando los brazos al frente.", animationType: "lateral_raise" },
-      { id: "encogimientos_hombros", name: "Encogimientos de hombros", group: "Hombros", equipment: "Mancuernas", description: "Eleva los hombros verticalmente hacia las orejas manteniendo los brazos estirados.", animationType: "shoulder_press" },
-
+{ id: "vuelos_laterales_mancuernas", name: "Vuelos laterales con mancuernas", group: "Hombros", equipment: "Mancuernas", description: "Eleva las mancuernas lateralmente hasta la altura de los hombros con una leve flexión de codo.", animationType: "lateral_raise", videoPath: "videos/vuelos_laterales_mancuernas.mp4" },
+{ id: "vuelos_laterales_polea", name: "Vuelos laterales en polea", group: "Hombros", equipment: "Polea", description: "Eleva el cable de costado asegurando tensión constante en el deltoides lateral.", animationType: "lateral_raise", videoPath: "videos/vuelos_laterales_polea.mp4" },
+{ id: "press_militar_mancuernas", name: "Press militar con mancuernas", group: "Hombros", equipment: "Mancuernas", description: "Sentado o parado, empuja las mancuernas por encima de tu cabeza verticalmente.", animationType: "shoulder_press", videoPath: "videos/press_militar_mancuernas.mp4" },
+{ id: "press_militar_barra", name: "Press militar con barra", group: "Hombros", equipment: "Barra", description: "Parado, empuja la barra verticalmente desde las clavículas por encima de la cabeza.", animationType: "shoulder_press", videoPath: "videos/press_militar_barra.mp4" },
+{ id: "posteriores_peck_deck", name: "Posteriores en peck deck", group: "Hombros", equipment: "Máquina", description: "Sentado al revés, empuja los brazos hacia atrás para trabajar la porción posterior del hombro.", animationType: "lateral_raise", videoPath: "videos/posteriores_peck_deck.mp4" },
+   //   { id: "posteriores_polea", name: "Posteriores en polea", group: "Hombros", equipment: "Polea", description: "Cruces de poleas altas para deltoides posterior cruzando los brazos al frente.", animationType: "lateral_raise" },
       // Bíceps
-      { id: "curl_bicep_mancuernas", name: "Curl de bícep con mancuernas", group: "Bíceps", equipment: "Mancuernas", description: "Flexiona el brazo girando la muñeca (supinación) al subir la mancuerna.", animationType: "curl" },
-      { id: "curl_bicep_barra", name: "Curl de bícep con barra", group: "Bíceps", equipment: "Barra", description: "Sujetá la barra con agarre supino y realizá una flexión controlada apretando los bíceps.", animationType: "curl" },
-      { id: "bicep_martillo_mancuernas", name: "Bícep martillo con mancuernas", group: "Bíceps", equipment: "Mancuernas", description: "Flexión con las palmas enfrentadas (agarre neutro), ideal para braquial y antebrazo.", animationType: "curl" },
+{ id: "curl_bicep_mancuernas", name: "Curl de bícep con mancuernas", group: "Bíceps", equipment: "Mancuernas", description: "Flexiona el brazo girando la muñeca (supinación) al subir la mancuerna.", animationType: "curl", videoPath: "videos/curl_bicep_mancuernas.mp4" },
+{ id: "curl_bicep_barra", name: "Curl de bícep con barra", group: "Bíceps", equipment: "Barra", description: "Sujetá la barra con agarre supino y realizá una flexión controlada apretando los bíceps.", animationType: "curl", videoPath: "videos/curl_bicep_barra.mp4" },
+{ id: "bicep_martillo_mancuernas", name: "Bícep martillo con mancuernas", group: "Bíceps", equipment: "Mancuernas", description: "Flexión con las palmas enfrentadas (agarre neutro), ideal para braquial y antebrazo.", animationType: "curl", videoPath: "videos/bicep_martillo_mancuernas.mp4" },
       { id: "martillo_barra", name: "Martillo con barra", group: "Bíceps", equipment: "Barra romana", description: "Curl con barra especial de agarre neutro manteniendo los codos estables.", animationType: "curl" },
-      { id: "curl_predicador", name: "Curl predicador", group: "Bíceps", equipment: "Banco Scott", description: "Apoya los brazos en el banco predicador para aislar por completo los bíceps sin balanceos.", animationType: "curl" },
-      { id: "curl_polea_baja", name: "Curl en polea baja", group: "Bíceps", equipment: "Polea", description: "Flexión de brazos usando tensión constante del cable.", animationType: "curl" },
+{ id: "curl_predicador", name: "Curl predicador", group: "Bíceps", equipment: "Banco Scott", description: "Apoya los brazos en el banco predicador para aislar por completo los bíceps sin balanceos.", animationType: "curl", videoPath: "videos/curl_predicador.mp4" },
+{ id: "curl_polea_baja", name: "Curl en polea baja", group: "Bíceps", equipment: "Polea", description: "Flexión de brazos usando tensión constante del cable.", animationType: "curl", videoPath: "videos/curl_polea_baja.mp4" },
 
       // Tríceps
-      { id: "extension_triceps_polea", name: "Extensión de tríceps (en polea)", group: "Tríceps", equipment: "Polea", description: "Empuja la barra o soga hacia abajo extendiendo completamente los codos al final del recorrido.", animationType: "tricep_ext" },
-      { id: "extension_cabeza", name: "Extensión por encima de la cabeza", group: "Tríceps", equipment: "Mancuerna/Polea", description: "Sostén el peso detrás de la nuca con codos arriba y extiéndelo verticalmente.", animationType: "tricep_ext" },
-      { id: "rompe_craneos", name: "Rompecráneos / Press francés", group: "Tríceps", equipment: "Barra EZ", description: "Acostado en banco, flexiona los codos bajando la barra hacia la frente y extiéndela verticalmente.", animationType: "tricep_ext" },
-      { id: "fondos_tricep", name: "Fondos para trícep", group: "Tríceps", equipment: "Paralelas", description: "Baja tu cuerpo verticalmente sosteniéndote de las barras paralelas con codos cerrados.", animationType: "chest_press_db" },
+{ id: "extension_triceps_polea", name: "Extensión de tríceps (en polea)", group: "Tríceps", equipment: "Polea", description: "Empuja la barra o soga hacia abajo extendiendo completamente los codos al final del recorrido.", animationType: "tricep_ext", videoPath: "videos/extension_triceps_polea.mp4" },
+      { id: "extension_cabeza", name: "Extensión por encima de la cabeza", group: "Tríceps", equipment: "Mancuerna/Polea", description: "Sostén el peso detrás de la nuca con codos arriba y extiéndelo verticalmente.", animationType: "tricep_ext", videoPath: "videos/extension_triceps_polea_arriba_cabeza.mp4" },
+{ id: "rompe_craneos", name: "Rompecráneos / Press francés", group: "Tríceps", equipment: "Barra EZ", description: "Acostado en banco, flexiona los codos bajando la barra hacia la frente y extiéndela verticalmente.", animationType: "tricep_ext", videoPath: "videos/rompe_craneos.mp4" },
+      { id: "fondos_tricep", name: "Fondos para trícep", group: "Tríceps", equipment: "Paralelas", description: "Baja tu cuerpo verticalmente sosteniéndote de las barras paralelas con codos cerrados.", animationType: "chest_press_db", videoPath: "videos/fondos.mp4"  },
       { id: "press_cerrado_barra", name: "Press cerrado con barra", group: "Tríceps", equipment: "Barra", description: "Press plano con agarre estrecho (ancho de hombros) para desplazar el trabajo al tríceps.", animationType: "chest_press_db" },
-      { id: "patada_tricep", name: "Patada de trícep", group: "Tríceps", equipment: "Mancuernas", description: "Inclinado hacia adelante con el brazo paralelo al suelo, extiende el codo hacia atrás.", animationType: "tricep_ext" },
-
       // Piernas
-      { id: "sentadillas", name: "Sentadillas", group: "Piernas", equipment: "Barra", description: "Con la barra en los trapecios, desciende flexionando rodillas e inclinando la cadera hacia atrás.", animationType: "squat" },
-      { id: "prensa_piernas", name: "Prensa de piernas", group: "Piernas", equipment: "Prensa 45°", description: "Empuja la plataforma con las plantas de tus pies cuidando no bloquear rodillas en la extensión.", animationType: "squat" },
-      { id: "hack_squat", name: "Hack squat (máquina)", group: "Piernas", equipment: "Máquina", description: "Sentadillas guiadas en plano inclinado con apoyo completo en la espalda.", animationType: "squat" },
-      { id: "gemelos_de_pie", name: "Gemelos de pie", group: "Piernas", equipment: "Máquina/Barra", description: "Eleva los talones con carga sobre los hombros enfocando en el gastrocnemio.", animationType: "squat" },
-      { id: "gemelos_sentado", name: "Gemelos sentado", group: "Piernas", equipment: "Máquina", description: "Elevación de talones sentado para dar mayor enfoque al sóleo.", animationType: "squat" },
-      { id: "extension_cuadriceps", name: "Extensión de cuádriceps (máquina)", group: "Piernas", equipment: "Máquina", description: "Sentado, extiende las piernas hacia arriba para aislar y concentrar los cuádriceps.", animationType: "squat" },
-      { id: "curl_femoral_acostado", name: "Curl femoral acostado", group: "Piernas", equipment: "Máquina", description: "Acostado boca abajo, flexiona las rodillas llevando el rodillo a los glúteos.", animationType: "squat" },
+{ id: "sentadillas", name: "Sentadillas", group: "Piernas", equipment: "Barra", description: "Con la barra en los trapecios, desciende flexionando rodillas e inclinando la cadera hacia atrás.", animationType: "squat", videoPath: "videos/sentadillas.mp4" },
+{ id: "prensa_piernas", name: "Prensa de piernas", group: "Piernas", equipment: "Prensa 45°", description: "Empuja la plataforma con las plantas de tus pies cuidando no bloquear rodillas en la extensión.", animationType: "squat", videoPath: "videos/prensa_piernas.mp4" },
+{ id: "hack_squat", name: "Hack squat (máquina)", group: "Piernas", equipment: "Máquina", description: "Sentadillas guiadas en plano inclinado con apoyo completo en la espalda.", animationType: "squat", videoPath: "videos/hack_squat.mp4" },
+{ id: "gemelos_de_pie", name: "Gemelos de pie", group: "Piernas", equipment: "Máquina/Barra", description: "Eleva los talones con carga sobre los hombros enfocando en el gastrocnemio.", animationType: "squat", videoPath: "videos/gemelos_de_pie.mp4" },
+{ id: "gemelos_sentado", name: "Gemelos sentado", group: "Piernas", equipment: "Máquina", description: "Elevación de talones sentado para dar mayor enfoque al sóleo.", animationType: "squat", videoPath: "videos/gemelos_sentado.mp4" },
+      { id: "extension_cuadriceps", name: "Extensión de cuádriceps (máquina)", group: "Piernas", equipment: "Máquina", description: "Sentado, extiende las piernas hacia arriba para aislar y concentrar los cuádriceps.", animationType: "squat", videoPath: "videos/extension_cuadriceps.mp4" },
       { id: "curl_femoral_sentado", name: "Curl femoral sentado", group: "Piernas", equipment: "Máquina", description: "Sentado, flexiona las piernas jalando el rodillo hacia abajo para aislar isquiotibiales.", animationType: "squat" },
-      { id: "peso_muerto_rumano", name: "Peso muerto rumano", group: "Piernas", equipment: "Barra/Mancuernas", description: "Desciende la barra manteniendo las piernas casi estiradas e inclinando la cadera hacia atrás.", animationType: "deadlift" },
+{ id: "peso_muerto_rumano", name: "Peso muerto rumano", group: "Piernas", equipment: "Barra/Mancuernas", description: "Desciende la barra manteniendo las piernas casi estiradas e inclinando la cadera hacia atrás.", animationType: "deadlift", videoPath: "videos/peso_muerto_rumano.mp4" },
       { id: "aductores", name: "Aductores (máquina)", group: "Piernas", equipment: "Máquina", description: "Cierra las piernas contra la resistencia para trabajar la cara interna de los muslos.", animationType: "squat" },
-      { id: "abductores", name: "Abductores", group: "Piernas", equipment: "Máquina/Panda", description: "Abre las piernas contra la resistencia para enfocar el glúteo medio.", animationType: "squat" },
-      { id: "zancadas_lunges", name: "Zancadas / Lunges", group: "Piernas", equipment: "Mancuernas", description: "Da un paso adelante descendiendo la cadera hasta flexionar ambas piernas a 90 grados.", animationType: "squat" },
+      { id: "abductores", name: "Abductores", group: "Piernas", equipment: "Máquina/Panda", description: "Abre las piernas contra la resistencia para enfocar el glúteo medio.", animationType: "squat", videoPath: "videos/abductores.mp4" },
       { id: "hip_thrust", name: "Hip thrust", group: "Piernas", equipment: "Barra", description: "Con la espalda alta apoyada en un banco, empuja la pelvis hacia arriba con la barra en la cadera.", animationType: "deadlift" },
-      { id: "sentadilla_bulgara", name: "Sentadilla búlgara", group: "Piernas", equipment: "Mancuernas", description: "Sentadilla a una pierna apoyando la punta del pie trasero en un banco elevado.", animationType: "squat" },
+{ id: "sentadilla_bulgara", name: "Sentadilla búlgara", group: "Piernas", equipment: "Mancuernas", description: "Sentadilla a una pierna apoyando la punta del pie trasero en un banco elevado.", animationType: "squat", videoPath: "videos/sentadilla_bulgara.mp4" },
       
       // Abdominales
-      { id: "abdominales_crunches", name: "Abdominales (crunches)", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba con rodillas flexionadas, eleva los hombros del suelo contrayendo el abdomen.", animationType: "crunch" },
-      { id: "plancha_baja", name: "Plancha baja", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en línea recta apoyado en antebrazos y puntas de los pies. Mantén el abdomen contraído.", animationType: "plank" },
-      { id: "plancha_alta", name: "Plancha alta", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en posición de flexión de brazos con los codos completamente extendidos.", animationType: "plank" },
-      { id: "elevaciones_piernas", name: "Elevaciones de piernas", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba, eleva las piernas estiradas hasta los 90 grados y desciende de forma controlada.", animationType: "crunch" },
-      { id: "giros_rusos", name: "Giros rusos", group: "Abdominales", equipment: "Peso corporal", description: "Sentado con el torso inclinado hacia atrás y pies elevados, rota el torso de lado a lado.", animationType: "crunch" }
+{ id: "abdominales_crunches", name: "Abdominales (crunches)", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba con rodillas flexionadas, eleva los hombros del suelo contrayendo el abdomen.", animationType: "crunch", videoPath: "videos/abdominales_crunches.mp4" },
+{ id: "plancha_baja", name: "Plancha baja", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en línea recta apoyado en antebrazos y puntas de los pies. Mantén el abdomen contraído.", animationType: "plank", videoPath: "videos/plancha_baja.mp4" },
+{ id: "plancha_alta", name: "Plancha alta", group: "Abdominales", equipment: "Peso corporal", description: "Sostén tu cuerpo en posición de flexión de brazos con los codos completamente extendidos.", animationType: "plank", videoPath: "videos/plancha_alta.mp4" },
+{ id: "elevaciones_piernas", name: "Elevaciones de piernas", group: "Abdominales", equipment: "Peso corporal", description: "Acostado boca arriba, eleva las piernas estiradas hasta los 90 grados y desciende de forma controlada.", animationType: "crunch", videoPath: "videos/elevaciones_piernas.mp4" },
+{ id: "giros_rusos", name: "Giros rusos", group: "Abdominales", equipment: "Peso corporal", description: "Sentado con el torso inclinado hacia atrás y pies elevados, rota el torso de lado a lado.", animationType: "crunch", videoPath: "videos/giros_rusos.mp4" }
     ];
 
     /***************************************************************************
@@ -1291,6 +1299,34 @@
         oneRmExerciseSelect.addEventListener('change', updateOneRmDashboard);
       }
       initOneRmTooltip();
+
+      // Media Viewer Listeners
+      document.addEventListener('click', (e) => {
+        const animContainer = e.target.closest('.anim-container');
+        if (animContainer) {
+          const exId = animContainer.getAttribute('data-ex-id');
+          if (exId) {
+            const ex = EXERCISES.find(item => item.id === exId);
+            if (ex) {
+              openMediaViewer(ex);
+            }
+          }
+        }
+      });
+
+      const closeMediaViewerBtn = document.getElementById('closeMediaViewerBtn');
+      if (closeMediaViewerBtn) {
+        closeMediaViewerBtn.addEventListener('click', closeMediaViewer);
+      }
+      
+      const mediaViewerModal = document.getElementById('mediaViewerModal');
+      if (mediaViewerModal) {
+        mediaViewerModal.addEventListener('click', (e) => {
+          if (e.target === mediaViewerModal) {
+            closeMediaViewer();
+          }
+        });
+      }
     }
 
     /***************************************************************************
@@ -1873,7 +1909,9 @@
       document.getElementById('step2MuscleChip').textContent = exercise.group;
       document.getElementById('step2EquipmentChip').textContent = exercise.equipment;
       
-      document.getElementById('step2AnimContainer').innerHTML = getAnimationSVG(exercise.animationType);
+      const step2Anim = document.getElementById('step2AnimContainer');
+      step2Anim.innerHTML = getExerciseMediaHTML(exercise);
+      step2Anim.setAttribute('data-ex-id', exercise.id);
       document.getElementById('saveSessionBtn').setAttribute('data-ex-id', exercise.id);
 
       // Update table headers for bodyweight and isometric
@@ -3040,8 +3078,8 @@
           </div>
           <div class="ex-card-body">
             <div class="ex-card-details-layout">
-              <div class="anim-container">
-                ${getAnimationSVG(ex.animationType)}
+              <div class="anim-container" data-ex-id="${ex.id}">
+                ${getExerciseMediaHTML(ex)}
               </div>
               <div class="ex-description">
                 ${ex.description}
@@ -3984,5 +4022,43 @@
           }
         }
       );
+    }
+
+    function openMediaViewer(exercise) {
+      const modal = document.getElementById('mediaViewerModal');
+      const container = document.getElementById('mediaViewerContent');
+      if (!modal || !container) return;
+
+      let html = '';
+      if (exercise.videoPath) {
+        html = `<div class="cropped-video-container">
+                  <video autoplay loop muted playsinline>
+                    <source src="${exercise.videoPath}" type="video/mp4">
+                    Tu navegador no soporta video.
+                  </video>
+                </div>`;
+      } else if (exercise.gifPath) {
+        html = `<img src="${exercise.gifPath}" alt="${exercise.name}">`;
+      } else {
+        html = getAnimationSVG(exercise.animationType);
+      }
+
+      container.innerHTML = html;
+      modal.classList.add('open');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function closeMediaViewer() {
+      const modal = document.getElementById('mediaViewerModal');
+      const container = document.getElementById('mediaViewerContent');
+      if (!modal || !container) return;
+
+      container.innerHTML = '';
+      modal.classList.remove('open');
+
+      const dailyPanel = document.getElementById('dayDetailPanel');
+      if (!dailyPanel || !dailyPanel.classList.contains('open')) {
+        document.body.style.overflow = '';
+      }
     }
   
