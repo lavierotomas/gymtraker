@@ -57,7 +57,7 @@ const server = http.createServer((req, res) => {
   const ext = path.extname(filePath);
   const contentType = MIME_TYPES[ext] || 'text/plain';
 
-  fs.readFile(filePath, (err, content) => {
+  fs.stat(filePath, (err, stats) => {
     if (err) {
       if (err.code === 'ENOENT') {
         res.writeHead(404);
@@ -66,12 +66,49 @@ const server = http.createServer((req, res) => {
         res.writeHead(500);
         res.end('Internal Server Error: ' + err.code);
       }
-    } else {
-      res.writeHead(200, { 
+      return;
+    }
+
+    if (stats.isDirectory()) {
+      res.writeHead(403);
+      res.end('Directory listing forbidden');
+      return;
+    }
+
+    const fileSize = stats.size;
+    const range = req.headers.range;
+
+    if (range) {
+      const parts = range.replace(/bytes=/, "").split("-");
+      const start = parseInt(parts[0], 10);
+      const end = parts[1] ? parseInt(parts[1], 10) : fileSize - 1;
+
+      if (start >= fileSize || end >= fileSize) {
+        res.writeHead(416, {
+          'Content-Range': `bytes */${fileSize}`,
+          'Access-Control-Allow-Origin': '*'
+        });
+        return res.end();
+      }
+
+      const chunksize = (end - start) + 1;
+      const file = fs.createReadStream(filePath, { start, end });
+
+      res.writeHead(206, {
+        'Content-Range': `bytes ${start}-${end}/${fileSize}`,
+        'Accept-Ranges': 'bytes',
+        'Content-Length': chunksize,
         'Content-Type': contentType,
         'Access-Control-Allow-Origin': '*'
       });
-      res.end(content, 'utf-8');
+      file.pipe(res);
+    } else {
+      res.writeHead(200, {
+        'Content-Length': fileSize,
+        'Content-Type': contentType,
+        'Access-Control-Allow-Origin': '*'
+      });
+      fs.createReadStream(filePath).pipe(res);
     }
   });
 });
